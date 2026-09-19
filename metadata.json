@@ -1,0 +1,8 @@
+{
+  "name": "Rachid_Shop",
+  "description": "متجر إلكتروني لبيع أحدث الملابس والأحذية.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
