@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
@@ -21,7 +22,13 @@ app.get("/api/cloudinary-sign", (req, res) => {
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
   if (!cloudName || !apiKey || !apiSecret) {
-    return res.status(500).json({ error: "إعدادات Cloudinary غير مكتملة في السيرفر" });
+    const missing: string[] = [];
+    if (!cloudName) missing.push("VITE_CLOUDINARY_CLOUD_NAME");
+    if (!apiKey) missing.push("CLOUDINARY_API_KEY");
+    if (!apiSecret) missing.push("CLOUDINARY_API_SECRET");
+    return res.status(500).json({
+      error: `إعدادات Cloudinary غير مكتملة في السيرفر. المتغيرات المفقودة: (${missing.join(", ")}). يرجى إضافتها في ملف .env أو استخدام رابط صورة مباشر.`
+    });
   }
 
   const timestamp = Math.round(new Date().getTime() / 1000);

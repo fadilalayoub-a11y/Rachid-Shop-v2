@@ -144,13 +144,24 @@ export function ShopByCategories() {
   const [customImages, setCustomImages] = useState<Record<string, string>>(() => {
     try {
       const saved = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : {};
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const clean: Record<string, string> = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (k !== 'customNames' && typeof v === 'string' && !v.startsWith('data:')) {
+            clean[k] = v;
+          }
+        }
+        return clean;
+      }
+      return {};
     } catch {
       return {};
     }
   });
+  const [customNames, setCustomNames] = useState<Record<string, { ar?: string; en?: string }>>({});
 
-  // الاستماع للتحديثات الحية من Firestore لصور الأقسام التي ترفعها الإدارة
+  // الاستماع للتحديثات الحية من Firestore لصور وعناوين الأقسام التي ترفعها الإدارة
   useEffect(() => {
     const docRef = doc(db, 'settings', 'category_images');
     const unsubscribe = onSnapshot(
@@ -159,9 +170,22 @@ export function ShopByCategories() {
         if (snapshot.exists()) {
           const data = snapshot.data();
           if (data && typeof data === 'object') {
-            setCustomImages(data as Record<string, string>);
+            const clean: Record<string, string> = {};
+            for (const [k, v] of Object.entries(data)) {
+              if (k !== 'customNames' && typeof v === 'string' && !v.startsWith('data:')) {
+                clean[k] = v;
+              }
+            }
+            setCustomImages(clean);
+
+            if (data.customNames && typeof data.customNames === 'object') {
+              setCustomNames(data.customNames as Record<string, { ar?: string; en?: string }>);
+            } else {
+              setCustomNames({});
+            }
+
             try {
-              localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(data));
+              localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(clean));
             } catch (e) {
               console.warn(e);
             }
@@ -235,7 +259,16 @@ export function ShopByCategories() {
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
             {DEFAULT_CATEGORIES_DATA.map((item) => {
-              const displayName = language === 'ar' ? item.nameAr : language === 'fr' ? item.nameFr : item.nameEn;
+              const customNameObj = customNames[item.id];
+              const customAr = customNameObj?.ar?.trim();
+              const customEn = customNameObj?.en?.trim();
+
+              const displayName = language === 'ar'
+                ? (customAr || item.nameAr)
+                : language === 'fr'
+                ? (customEn || item.nameFr)
+                : (customEn || item.nameEn);
+
               const displayImage = customImages[item.id] || item.image;
 
               return (

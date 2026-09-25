@@ -57,8 +57,12 @@ export function normalizeHeroSlides(data: any): HeroSlide[] {
         ? '' 
         : rawBadge;
 
+      const rawImg = typeof s === 'string' ? s : s?.image;
+      const defaultImg = DEFAULT_HERO_SLIDES[idx % DEFAULT_HERO_SLIDES.length].image;
+      const safeImg = (typeof rawImg === 'string' && !rawImg.startsWith('data:')) ? rawImg : defaultImg;
+
       return {
-        image: typeof s === 'string' ? s : (s.image || DEFAULT_HERO_SLIDES[idx % DEFAULT_HERO_SLIDES.length].image),
+        image: safeImg,
         badge: cleanBadge,
         title: s.title ?? (idx === 0 ? 'اكتشف أحدث صيحات الموضة' : ''),
         subtitle: s.subtitle ?? '',
@@ -82,8 +86,9 @@ export function normalizeHeroSlides(data: any): HeroSlide[] {
   if (Array.isArray(data.images) && data.images.length > 0) {
     return data.images.map((img: string, idx: number) => {
       const defaultSlide = DEFAULT_HERO_SLIDES[idx % DEFAULT_HERO_SLIDES.length];
+      const safeImg = (typeof img === 'string' && !img.startsWith('data:')) ? img : defaultSlide.image;
       return {
-        image: img,
+        image: safeImg,
         badge: '',
         title: defaultSlide.title || (idx === 0 ? 'اكتشف أحدث صيحات الموضة' : ''),
         subtitle: defaultSlide.subtitle || '',

@@ -101,58 +101,48 @@ export function HeroImagesTab() {
     setIsUploading(true);
 
     try {
+      // 1. فحص تصريح الرفع الآمن من السيرفر
+      const sigRes = await fetch('/api/cloudinary-sign');
+      if (!sigRes.ok) {
+        const errData = await sigRes.json().catch(() => ({}));
+        throw new Error(
+          errData.error ||
+            'إعدادات Cloudinary غير متوفرة في السيرفر. يرجى ضبط مفاتيح Cloudinary أو استخدام خيار "رابط صورة مباشر".'
+        );
+      }
+
+      const sigData = await sigRes.json();
+      const { timestamp, signature, apiKey, cloudName } = sigData;
       const newSlides: HeroSlide[] = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (!file.type.startsWith('image/')) continue;
 
-        let uploadedUrl = '';
-        try {
-          const sigRes = await fetch('/api/cloudinary-sign');
-          if (sigRes.ok) {
-            const sigData = await sigRes.json();
-            const { timestamp, signature, apiKey, cloudName } = sigData;
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('api_key', apiKey);
-            formData.append('timestamp', timestamp.toString());
-            formData.append('signature', signature);
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', apiKey);
+        formData.append('timestamp', timestamp.toString());
+        formData.append('signature', signature);
 
-            const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-              method: 'POST',
-              body: formData,
-            });
+        const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+          method: 'POST',
+          body: formData,
+        });
 
-            if (uploadRes.ok) {
-              const uploadData = await uploadRes.json();
-              if (uploadData.secure_url) {
-                uploadedUrl = uploadData.secure_url;
-              }
-            }
-          }
-        } catch (e) {
-          console.warn('Cloudinary upload fallback to data URL:', e);
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok || !uploadData.secure_url) {
+          throw new Error(uploadData.error?.message || 'فشل رفع إحدى الصور إلى Cloudinary.');
         }
 
-        if (!uploadedUrl) {
-          uploadedUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-        }
-
-        if (uploadedUrl) {
-          newSlides.push({
-            image: uploadedUrl,
-            badge: '',
-            title: 'اكتشف أحدث صيحات الموضة',
-            subtitle: 'تشكيلة رائعة من الملابس والأحذية العصرية التي تناسب ذوقك وتمنحك إطلالة فريدة ومتميزة.',
-            ctaText: 'تسوق الآن'
-          });
-        }
+        const uploadedUrl = uploadData.secure_url;
+        newSlides.push({
+          image: uploadedUrl,
+          badge: '',
+          title: 'اكتشف أحدث صيحات الموضة',
+          subtitle: 'تشكيلة رائعة من الملابس والأحذية العصرية التي تناسب ذوقك وتمنحك إطلالة فريدة ومتميزة.',
+          ctaText: 'تسوق الآن'
+        });
       }
 
       if (newSlides.length > 0) {
@@ -162,8 +152,8 @@ export function HeroImagesTab() {
         setUploadError('يرجى اختيار ملفات صور صالحة.');
       }
     } catch (err: any) {
-      console.error('Error uploading:', err);
-      setUploadError(err.message || 'حدث خطأ أثناء رفع الصور');
+      console.error('Error uploading to Cloudinary:', err);
+      setUploadError(err.message || 'حدث خطأ أثناء رفع الصور إلى Cloudinary');
     } finally {
       setIsUploading(false);
     }
@@ -248,10 +238,9 @@ export function HeroImagesTab() {
     setIsSaving(true);
     setUploadError('');
     try {
-      const imagesOnly = slides.map(s => s.image);
-      localStorage.setItem(HERO_SLIDES_STORAGE_KEY, JSON.stringify(slides));
-      localStorage.setItem(HERO_STORAGE_KEY, JSON.stringify(imagesOnly));
+      const imagesOnly = slides.map((s) => s.image);
 
+      // حفظ في Firestore أولاً كمرجع أساسي ودائم لجميع المستخدمين
       await setDoc(
         doc(db, 'settings', 'hero'),
         {
@@ -262,13 +251,20 @@ export function HeroImagesTab() {
         { merge: true }
       );
 
+      try {
+        localStorage.setItem(HERO_SLIDES_STORAGE_KEY, JSON.stringify(slides));
+        localStorage.setItem(HERO_STORAGE_KEY, JSON.stringify(imagesOnly));
+      } catch (e) {
+        console.warn('LocalStorage save error:', e);
+      }
+
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err: any) {
-      console.error('Error saving hero slides:', err);
-      // Fallback local update
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      console.error('Error saving hero slides to Firestore:', err);
+      setUploadError(
+        `فشل الحفظ في قاعدة البيانات Firebase: ${err.message || 'يرجى مراجعة الاتصال أو الصلاحيات'}`
+      );
     } finally {
       setIsSaving(false);
     }

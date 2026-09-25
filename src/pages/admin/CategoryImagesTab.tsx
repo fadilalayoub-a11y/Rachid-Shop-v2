@@ -3,27 +3,31 @@ import { db } from '../../lib/firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 import {
   Upload,
-  Image as ImageIcon,
   Check,
   RotateCcw,
-  ExternalLink,
-  Sparkles,
   Layers,
-  ArrowRight
+  Type,
+  CheckCircle2
 } from 'lucide-react';
 import { DEFAULT_CATEGORIES_DATA, CATEGORIES_STORAGE_KEY } from '../../components/ShopByCategories';
 
+export interface CategoryCustomNames {
+  ar?: string;
+  en?: string;
+}
+
 export function CategoryImagesTab() {
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [categoryNames, setCategoryNames] = useState<Record<string, CategoryCustomNames>>({});
   const [uploadingCategory, setUploadingCategory] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [urlInputs, setUrlInputs] = useState<Record<string, string>>({});
+  const [savedCategoryId, setSavedCategoryId] = useState<string | null>(null);
 
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // استرجاع صور الأقسام المحفوظة من Firestore مع fallback إلى localStorage
+  // استرجاع صور وأسماء الأقسام المحفوظة حصرياً من Firestore (قاعدة البيانات الأساسية)
   useEffect(() => {
     const docRef = doc(db, 'settings', 'category_images');
     const unsubscribe = onSnapshot(
@@ -32,20 +36,33 @@ export function CategoryImagesTab() {
         if (snapshot.exists()) {
           const data = snapshot.data();
           if (data && typeof data === 'object') {
-            setCategoryImages(data as Record<string, string>);
+            // تصفية الصور النقية
+            const cleanImages: Record<string, string> = {};
+            for (const [key, val] of Object.entries(data)) {
+              if (key !== 'customNames' && typeof val === 'string' && !val.startsWith('data:')) {
+                cleanImages[key] = val;
+              }
+            }
+            setCategoryImages(cleanImages);
+
+            // استرجاع الأسماء المخصصة للأقسام إن وجدت
+            if (data.customNames && typeof data.customNames === 'object') {
+              setCategoryNames(data.customNames as Record<string, CategoryCustomNames>);
+            } else {
+              setCategoryNames({});
+            }
+
             try {
-              localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(data));
+              localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(cleanImages));
             } catch (e) {
               console.warn(e);
             }
           }
         } else {
-          // استعادة من localStorage إن وجد
+          setCategoryImages({});
+          setCategoryNames({});
           try {
-            const local = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-            if (local) {
-              setCategoryImages(JSON.parse(local));
-            }
+            localStorage.removeItem(CATEGORIES_STORAGE_KEY);
           } catch (e) {
             console.warn(e);
           }
@@ -53,21 +70,47 @@ export function CategoryImagesTab() {
       },
       (err) => {
         console.warn('Firestore category_images listener error:', err);
-        try {
-          const local = localStorage.getItem(CATEGORIES_STORAGE_KEY);
-          if (local) {
-            setCategoryImages(JSON.parse(local));
-          }
-        } catch (e) {
-          console.warn(e);
-        }
       }
     );
 
     return () => unsubscribe();
   }, []);
 
-  // دالة رفع الصورة لقسم محدد
+  // حفظ التعديلات كاملة في Firestore
+  const saveCategoriesData = async (
+    imagesToSave: Record<string, string>,
+    namesToSave: Record<string, CategoryCustomNames>
+  ) => {
+    setIsSaving(true);
+    setErrorMessage('');
+    try {
+      const dataToSave = {
+        ...imagesToSave,
+        customNames: namesToSave,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, 'settings', 'category_images'), dataToSave);
+
+      try {
+        localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(imagesToSave));
+      } catch (e) {
+        console.warn(e);
+      }
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      console.error('Error saving categories data to Firestore:', err);
+      setErrorMessage(
+        `فشل الحفظ في قاعدة البيانات Firebase: ${err.message || 'يرجى التأكد من اتصال الإنترنت والصلاحيات'}`
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // دالة رفع الصورة لقسم محدد مباشرة إلى Cloudinary
   const handleUploadForCategory = async (categoryId: string, file: File) => {
     if (!file || !file.type.startsWith('image/')) {
       setErrorMessage('يرجى اختيار ملف صورة صالح.');
@@ -78,137 +121,92 @@ export function CategoryImagesTab() {
     setErrorMessage('');
 
     try {
-      let uploadedUrl = '';
-
-      // محاولة الرفع إلى Cloudinary أولاً
-      try {
-        const sigRes = await fetch('/api/cloudinary-sign');
-        if (sigRes.ok) {
-          const sigData = await sigRes.json();
-          const { timestamp, signature, apiKey, cloudName } = sigData;
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('api_key', apiKey);
-          formData.append('timestamp', timestamp.toString());
-          formData.append('signature', signature);
-
-          const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (uploadRes.ok) {
-            const uploadData = await uploadRes.json();
-            if (uploadData.secure_url) {
-              uploadedUrl = uploadData.secure_url;
-            }
-          }
-        }
-      } catch (err) {
-        console.warn('Cloudinary upload fallback to data URL:', err);
+      // 1. طلب تصريح الرفع الآمن إلى Cloudinary من السيرفر
+      const sigRes = await fetch('/api/cloudinary-sign');
+      if (!sigRes.ok) {
+        const errData = await sigRes.json().catch(() => ({}));
+        throw new Error(
+          errData.error ||
+            'إعدادات Cloudinary غير مكتملة في السيرفر. يرجى ضبط مفاتيح Cloudinary في ملف .env ليتم رفع الصورة بنجاح.'
+        );
       }
 
-      // في حال عدم توفر Cloudinary نستخدم Data URL بعد ضغط خفيف
-      if (!uploadedUrl) {
-        uploadedUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              const MAX_WIDTH = 900;
-              const MAX_HEIGHT = 1200;
-              let width = img.width;
-              let height = img.height;
+      const sigData = await sigRes.json();
+      const { timestamp, signature, apiKey, cloudName } = sigData;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', apiKey);
+      formData.append('timestamp', timestamp.toString());
+      formData.append('signature', signature);
 
-              if (width > height) {
-                if (width > MAX_WIDTH) {
-                  height *= MAX_WIDTH / width;
-                  width = MAX_WIDTH;
-                }
-              } else {
-                if (height > MAX_HEIGHT) {
-                  width *= MAX_HEIGHT / height;
-                  height = MAX_HEIGHT;
-                }
-              }
+      // 2. رفع الصورة مباشرة إلى Cloudinary
+      const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
 
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext('2d');
-              ctx?.drawImage(img, 0, 0, width, height);
-              resolve(canvas.toDataURL('image/jpeg', 0.85));
-            };
-            img.onerror = reject;
-            img.src = e.target?.result as string;
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok || !uploadData.secure_url) {
+        throw new Error(uploadData.error?.message || 'فشل رفع الصورة إلى Cloudinary.');
       }
 
-      if (uploadedUrl) {
-        const updated = {
-          ...categoryImages,
-          [categoryId]: uploadedUrl,
-        };
-        setCategoryImages(updated);
-        await saveCategoriesImages(updated);
-      }
+      const uploadedUrl = uploadData.secure_url;
+
+      // 3. تحديث وحفظ رابط Cloudinary في قاعدة البيانات Firestore
+      const updatedImages = {
+        ...categoryImages,
+        [categoryId]: uploadedUrl,
+      };
+      setCategoryImages(updatedImages);
+      await saveCategoriesData(updatedImages, categoryNames);
     } catch (err: any) {
+      console.error('Upload category image error:', err);
       setErrorMessage(err.message || 'حدث خطأ أثناء رفع الصورة.');
     } finally {
       setUploadingCategory(null);
     }
   };
 
-  // دالة إضافة رابط مباشر لصورة القسم
-  const handleAddUrl = async (categoryId: string) => {
-    const url = urlInputs[categoryId]?.trim();
-    if (!url) return;
-
-    const updated = {
-      ...categoryImages,
-      [categoryId]: url,
-    };
-    setCategoryImages(updated);
-    setUrlInputs((prev) => ({ ...prev, [categoryId]: '' }));
-    await saveCategoriesImages(updated);
+  // تعديل اسم وعنوان القسم
+  const handleUpdateCategoryName = (categoryId: string, lang: 'ar' | 'en', val: string) => {
+    setCategoryNames((prev) => ({
+      ...prev,
+      [categoryId]: {
+        ...prev[categoryId],
+        [lang]: val,
+      },
+    }));
   };
 
-  // حفظ التعديلات في Firestore و localStorage
-  const saveCategoriesImages = async (dataToSave: Record<string, string>) => {
-    setIsSaving(true);
-    setErrorMessage('');
-    try {
-      await setDoc(doc(db, 'settings', 'category_images'), dataToSave);
-      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(dataToSave));
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (err: any) {
-      console.error('Error saving category images to Firestore:', err);
-      // حفظ محلي في حال فشل الاتصال بقاعدة البيانات
-      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(dataToSave));
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    } finally {
-      setIsSaving(false);
-    }
+  // حفظ اسم قسم محدد
+  const handleSaveCategoryName = async (categoryId: string) => {
+    setSavedCategoryId(categoryId);
+    await saveCategoriesData(categoryImages, categoryNames);
+    setTimeout(() => setSavedCategoryId(null), 2500);
+  };
+
+  // استعادة الاسم الافتراضي لقسم محدد
+  const handleResetCategoryName = async (categoryId: string) => {
+    const updated = { ...categoryNames };
+    delete updated[categoryId];
+    setCategoryNames(updated);
+    await saveCategoriesData(categoryImages, updated);
   };
 
   // استعادة الصورة الافتراضية لقسم محدد
-  const handleResetCategory = async (categoryId: string) => {
+  const handleResetCategoryImage = async (categoryId: string) => {
     const updated = { ...categoryImages };
     delete updated[categoryId];
     setCategoryImages(updated);
-    await saveCategoriesImages(updated);
+    await saveCategoriesData(updated, categoryNames);
   };
 
-  // استعادة الكل إلى الصور الافتراضية
+  // استعادة الكل إلى الافتراضي
   const handleResetAll = async () => {
-    if (!window.confirm('هل أنت متأكد من رغبتك في استعادة جميع الصور الافتراضية للأقسام؟')) return;
+    if (!window.confirm('هل أنت متأكد من استعادة كافة الصور والأسماء الافتراضية الأصلية لجميع الأقسام؟')) return;
     setCategoryImages({});
-    await saveCategoriesImages({});
+    setCategoryNames({});
+    await saveCategoriesData({}, {});
   };
 
   return (
@@ -221,10 +219,10 @@ export function CategoryImagesTab() {
               <span className="p-2 rounded-xl bg-stone-900 text-white">
                 <Layers className="w-5 h-5" />
               </span>
-              <h2 className="text-xl font-bold text-stone-900">إدارة صور أقسام "Shop By Categories"</h2>
+              <h2 className="text-xl font-bold text-stone-900">إدارة صور وعناوين أقسام "Shop By Categories"</h2>
             </div>
             <p className="text-sm text-stone-500 leading-relaxed">
-              يمكنك هنا رفع أو تغيير صور الأقسام والبطاقات الـ 14 المعروضة في الصفحة الرئيسية بسهولة. تظهر الصور فوراً للزوار.
+              يمكنك هنا رفع صورة كل قسم وتعديل اسمه وعنوانه (بالعربية والإنجليزية) ليتم حفظها مباشرة في قاعدة البيانات وعرضها لكافة الزوار.
             </p>
           </div>
 
@@ -234,7 +232,7 @@ export function CategoryImagesTab() {
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-stone-200 text-stone-600 hover:text-red-600 hover:border-red-200 text-xs font-bold transition-all cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>استعادة الصور الأصلية</span>
+              <span>استعادة الإعدادات الأصلية</span>
             </button>
           </div>
         </div>
@@ -243,7 +241,7 @@ export function CategoryImagesTab() {
         {saveSuccess && (
           <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-fadeIn">
             <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>تم حفظ التعديلات بنجاح وتحديث المتجر فوراً!</span>
+            <span>تم حفظ التعديلات بنجاح في قاعدة البيانات وتحديث المتجر فوراً!</span>
           </div>
         )}
 
@@ -254,51 +252,67 @@ export function CategoryImagesTab() {
         )}
       </div>
 
-      {/* شبكة الأقسام الـ 14 مع معاينة فورية وأزرار الرفع */}
+      {/* شبكة الأقسام الـ 14 مع معاينة فورية وتعديل الاسم والصورة */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {DEFAULT_CATEGORIES_DATA.map((cat) => {
           const currentImage = categoryImages[cat.id] || cat.image;
-          const isCustom = !!categoryImages[cat.id];
+          const isCustomImage = !!categoryImages[cat.id];
           const isUploading = uploadingCategory === cat.id;
+
+          const customNameObj = categoryNames[cat.id];
+          const displayArName = customNameObj?.ar?.trim() || cat.nameAr;
+          const displayEnName = customNameObj?.en?.trim() || cat.nameEn;
+          const isCustomName = !!(customNameObj?.ar?.trim() || customNameObj?.en?.trim());
+          const isJustSaved = savedCategoryId === cat.id;
 
           return (
             <div
               key={cat.id}
               className="bg-white rounded-2xl border border-stone-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col"
             >
-              {/* شريط عنوان القسم */}
+              {/* شريط عنوان القسم الحالي */}
               <div className="p-3.5 border-b border-stone-100 flex items-center justify-between bg-stone-50/70">
-                <div>
-                  <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wide">
-                    {cat.nameEn}
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-stone-900 uppercase tracking-wide truncate">
+                    {displayEnName}
                   </h3>
-                  <span className="text-xs text-stone-500 font-medium">{cat.nameAr}</span>
+                  <span className="text-xs text-stone-500 font-medium truncate block">
+                    {displayArName}
+                  </span>
                 </div>
-                {isCustom ? (
-                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
-                    مخصصة
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-bold bg-stone-200 text-stone-700 px-2 py-0.5 rounded-full">
-                    افتراضية
-                  </span>
-                )}
+                <div className="flex gap-1 shrink-0">
+                  {isCustomImage && (
+                    <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+                      صورة مخصصة
+                    </span>
+                  )}
+                  {isCustomName && (
+                    <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full border border-blue-200">
+                      اسم معدل
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* معاينة الصورة كما تظهر تماماً في المتجر */}
               <div className="relative aspect-[3/4] bg-stone-100 overflow-hidden group">
                 <img
                   src={currentImage}
-                  alt={cat.nameEn}
+                  alt={displayEnName}
                   className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
                 />
 
-                {/* الشارة البيضاء السفلية كما بالمتجر */}
+                {/* الشارة البيضاء السفلية كما بالمتجر تماماً مع الاسم المعدل */}
                 <div className="absolute bottom-3 inset-x-0 flex justify-center px-2 pointer-events-none">
-                  <div className="bg-white px-3 py-1.5 shadow-sm text-center">
-                    <span className="block text-[11px] font-bold text-stone-900 tracking-wider uppercase">
-                      {cat.nameEn}
+                  <div className="bg-white px-3 py-1.5 shadow-sm text-center max-w-[90%]">
+                    <span className="block text-[11px] font-bold text-stone-900 tracking-wider uppercase truncate">
+                      {displayEnName}
                     </span>
+                    {customNameObj?.ar?.trim() && (
+                      <span className="block text-[10px] text-stone-600 font-medium truncate">
+                        {customNameObj.ar.trim()}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -306,12 +320,12 @@ export function CategoryImagesTab() {
                 {isUploading && (
                   <div className="absolute inset-0 bg-stone-900/60 flex flex-col items-center justify-center text-white gap-2 backdrop-blur-xs">
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs font-bold">جاري رفع الصورة...</span>
+                    <span className="text-xs font-bold">جاري رفع الصورة إلى Cloudinary...</span>
                   </div>
                 )}
               </div>
 
-              {/* أزرار التحكم والرفع */}
+              {/* أزرار التحكم بالصورة وتعديل اسم القسم */}
               <div className="p-4 flex-1 flex flex-col justify-between gap-3 bg-white">
                 <input
                   type="file"
@@ -325,45 +339,90 @@ export function CategoryImagesTab() {
                   className="hidden"
                 />
 
+                {/* زر رفع الصورة وزر استعادتها */}
                 <div className="flex gap-2">
                   <button
                     onClick={() => fileInputRefs.current[cat.id]?.click()}
                     disabled={isUploading || isSaving}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-stone-900 hover:bg-black text-white text-xs font-bold py-2.5 px-3 rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-stone-900 hover:bg-black text-white text-xs font-bold py-2 px-3 rounded-xl transition-all cursor-pointer shadow-xs disabled:opacity-50"
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>رفع صورة جديدة</span>
                   </button>
 
-                  {isCustom && (
+                  {isCustomImage && (
                     <button
-                      onClick={() => handleResetCategory(cat.id)}
+                      onClick={() => handleResetCategoryImage(cat.id)}
                       title="استعادة الصورة الأصلية لهذا القسم"
-                      className="p-2.5 text-stone-500 hover:text-red-600 hover:bg-red-50 rounded-xl border border-stone-200 transition-colors cursor-pointer"
+                      className="p-2 text-stone-500 hover:text-red-600 hover:bg-red-50 rounded-xl border border-stone-200 transition-colors cursor-pointer"
                     >
                       <RotateCcw className="w-4 h-4" />
                     </button>
                   )}
                 </div>
 
-                {/* إدخال رابط خارجي كبديل */}
-                <div className="pt-2 border-t border-stone-100">
-                  <div className="flex gap-1.5">
-                    <input
-                      type="url"
-                      placeholder="أو ألصق رابط صورة..."
-                      value={urlInputs[cat.id] || ''}
-                      onChange={(e) => setUrlInputs({ ...urlInputs, [cat.id]: e.target.value })}
-                      className="flex-1 px-2.5 py-1.5 text-[11px] rounded-lg border border-stone-200 focus:outline-hidden focus:ring-1 focus:ring-stone-900 font-sans"
-                    />
-                    <button
-                      onClick={() => handleAddUrl(cat.id)}
-                      disabled={!urlInputs[cat.id]?.trim()}
-                      className="px-2.5 py-1.5 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-lg text-xs font-bold disabled:opacity-40 cursor-pointer"
-                    >
-                      حفظ
-                    </button>
+                {/* قسم تعديل اسم / عنوان القسم (بديل للرابط) */}
+                <div className="pt-3 border-t border-stone-100 space-y-2 bg-stone-50/60 p-3 rounded-xl border border-stone-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-stone-800 flex items-center gap-1">
+                      <Type className="w-3.5 h-3.5 text-blue-600" />
+                      <span>تعديل اسم القسم:</span>
+                    </span>
+
+                    {isCustomName && (
+                      <button
+                        onClick={() => handleResetCategoryName(cat.id)}
+                        className="text-[10px] text-stone-400 hover:text-red-600 font-bold cursor-pointer"
+                        title="استعادة الاسم الأصلي"
+                      >
+                        استعادة الأصلي
+                      </button>
+                    )}
                   </div>
+
+                  <div className="space-y-1.5">
+                    <div>
+                      <input
+                        type="text"
+                        placeholder={`بالعربية: ${cat.nameAr}`}
+                        value={categoryNames[cat.id]?.ar ?? ''}
+                        onChange={(e) => handleUpdateCategoryName(cat.id, 'ar', e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-stone-200 focus:outline-hidden focus:ring-1 focus:ring-stone-900 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder={`بالإنجليزية: ${cat.nameEn}`}
+                        value={categoryNames[cat.id]?.en ?? ''}
+                        onChange={(e) => handleUpdateCategoryName(cat.id, 'en', e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-stone-200 focus:outline-hidden focus:ring-1 focus:ring-stone-900 bg-white font-sans"
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => handleSaveCategoryName(cat.id)}
+                    disabled={isSaving}
+                    className={`w-full py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5 ${
+                      isJustSaved
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-stone-900 hover:bg-black text-white disabled:opacity-40'
+                    }`}
+                  >
+                    {isJustSaved ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>تم حفظ الاسم!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>حفظ اسم القسم</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
