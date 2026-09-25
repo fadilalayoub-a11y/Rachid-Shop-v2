@@ -23,6 +23,8 @@ import {
   InventoryTab,
   AddProductTab,
   DeleteConfirmModal,
+  HeroImagesTab,
+  CategoryImagesTab,
 } from './admin';
 
 export function Admin() {
@@ -44,7 +46,9 @@ export function Admin() {
   const [originalPrice, setOriginalPrice] = useState('');
   const [inventory, setInventory] = useState<{ size: string; stock: string }[]>([{ size: '', stock: '' }]);
   const [category, setCategory] = useState<'clothes' | 'shoes' | 'accessories'>('clothes');
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [subcategory, setSubcategory] = useState('t-shirts');
+  const [collectionsList, setCollectionsList] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formMessage, setFormMessage] = useState({ type: '', text: '' });
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
@@ -151,8 +155,8 @@ export function Admin() {
     e.preventDefault();
     setFormMessage({ type: '', text: '' });
 
-    if (!imageFile || !name || !description || !price) {
-      setFormMessage({ type: 'error', text: 'يرجى تعبئة جميع الحقول وإرفاق صورة' });
+    if (imageFiles.length === 0 || !name || !description || !price) {
+      setFormMessage({ type: 'error', text: 'يرجى تعبئة جميع الحقول وإرفاق صورة واحدة على الأقل للمنتج' });
       return;
     }
 
@@ -167,28 +171,32 @@ export function Admin() {
       }
 
       const { timestamp, signature, apiKey, cloudName } = signatureData;
-
-      // 2. Upload Image to Cloudinary (Signed)
-      const formData = new FormData();
-      formData.append('file', imageFile);
-      formData.append('api_key', apiKey);
-      formData.append('timestamp', timestamp.toString());
-      formData.append('signature', signature);
-
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
-      const response = await fetch(cloudinaryUrl, {
-        method: 'POST',
-        body: formData,
-      });
+      // 2. Upload All Selected Images in parallel/sequence to Cloudinary
+      const uploadedUrls: string[] = [];
+      for (const file of imageFiles) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', apiKey);
+        formData.append('timestamp', timestamp.toString());
+        formData.append('signature', signature);
 
-      const data = await response.json();
+        const response = await fetch(cloudinaryUrl, {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error(data.error?.message || 'Error uploading image to Cloudinary');
+        const data = await response.json();
+        if (!response.ok || !data.secure_url) {
+          throw new Error(data.error?.message || 'خطأ أثناء رفع إحدى الصور');
+        }
+
+        uploadedUrls.push(data.secure_url);
       }
 
-      const imageUrl = data.secure_url;
+      const primaryImageUrl = uploadedUrls[0];
+      const secondaryImageUrl = uploadedUrls.length > 1 ? uploadedUrls[1] : null;
 
       // 3. Save Product to Firestore
       const validInventory = inventory
@@ -205,7 +213,11 @@ export function Admin() {
         originalPrice: originalPrice ? Number(originalPrice) : null,
         inventory: validInventory,
         category,
-        image: imageUrl,
+        subcategory,
+        collections: collectionsList,
+        image: primaryImageUrl,
+        secondaryImage: secondaryImageUrl,
+        images: uploadedUrls,
         createdAt: serverTimestamp(),
       });
 
@@ -216,7 +228,9 @@ export function Admin() {
       setOriginalPrice('');
       setInventory([{ size: '', stock: '' }]);
       setCategory('clothes');
-      setImageFile(null);
+      setSubcategory('t-shirts');
+      setCollectionsList([]);
+      setImageFiles([]);
       setFormMessage({ type: 'success', text: 'تمت إضافة المنتج بنجاح!' });
     } catch (error: any) {
       console.error('Error adding product:', error);
@@ -283,8 +297,12 @@ export function Admin() {
               setInventory={setInventory}
               category={category}
               setCategory={setCategory}
-              imageFile={imageFile}
-              setImageFile={setImageFile}
+              subcategory={subcategory}
+              setSubcategory={setSubcategory}
+              collections={collectionsList}
+              setCollections={setCollectionsList}
+              imageFiles={imageFiles}
+              setImageFiles={setImageFiles}
               isSubmitting={isSubmitting}
               formMessage={formMessage}
               setFormMessage={setFormMessage}
@@ -311,6 +329,12 @@ export function Admin() {
               onGoToAddProduct={() => setAdminTab('add_product')}
             />
           )}
+
+          {/* Tab 4: Category Images */}
+          {adminTab === 'category_images' && <CategoryImagesTab />}
+
+          {/* Tab 5: Hero Images */}
+          {adminTab === 'hero_images' && <HeroImagesTab />}
         </div>
 
         {/* Edit Product Modal */}

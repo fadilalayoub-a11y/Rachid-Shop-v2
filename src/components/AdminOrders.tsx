@@ -17,6 +17,7 @@ import {
   TrendingUp,
   AlertCircle
 } from 'lucide-react';
+import { normalizeProductImageUrl } from '../utils/image';
 
 export function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -282,7 +283,7 @@ export function AdminOrders() {
                         <div key={idx} className="p-3 flex items-center justify-between gap-3 text-sm hover:bg-gray-50/50">
                           <div className="flex items-center gap-3 min-w-0">
                             <img
-                              src={item.image}
+                              src={normalizeProductImageUrl(item.image)}
                               alt={item.name}
                               className="w-12 h-12 rounded-lg object-cover bg-gray-100 border border-gray-100 shrink-0"
                             />

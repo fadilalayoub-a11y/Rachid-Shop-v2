@@ -1,6 +1,6 @@
-import { Package, Plus, ClipboardList } from 'lucide-react';
+import { Package, Plus, ClipboardList, Image as ImageIcon, Layers } from 'lucide-react';
 
-export type AdminTabType = 'inventory' | 'add_product' | 'orders';
+export type AdminTabType = 'inventory' | 'add_product' | 'orders' | 'hero_images' | 'category_images';
 
 interface AdminTabsNavProps {
   currentTab: AdminTabType;
@@ -63,6 +63,30 @@ export function AdminTabsNav({
             {pendingOrdersCount} جديد
           </span>
         )}
+      </button>
+
+      <button
+        onClick={() => onTabChange('category_images')}
+        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
+          currentTab === 'category_images'
+            ? 'bg-gray-900 text-white shadow-sm'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+        }`}
+      >
+        <Layers className="w-4 h-4 text-emerald-500" />
+        <span>صور الأقسام (Categories)</span>
+      </button>
+
+      <button
+        onClick={() => onTabChange('hero_images')}
+        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
+          currentTab === 'hero_images'
+            ? 'bg-gray-900 text-white shadow-sm'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+        }`}
+      >
+        <ImageIcon className="w-4 h-4 text-blue-500" />
+        <span>واجهة الإعلانات والصور (Hero)</span>
       </button>
     </div>
   );

@@ -85,6 +85,39 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "السيرفر يعمل بنجاح!" });
 });
 
+// مسار جلب إحصائيات المنتجات الأكثر مبيعاً استناداً إلى الطلبات المكتملة (Delivered)
+app.get("/api/best-sellers", async (req, res) => {
+  try {
+    let db: FirebaseFirestore.Firestore;
+    try {
+      db = getAdminDb();
+    } catch {
+      return res.json({ salesCounts: {} });
+    }
+
+    const ordersSnapshot = await db.collection("orders").where("status", "==", "delivered").get();
+    const salesCounts: Record<string, number> = {};
+
+    ordersSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (Array.isArray(data.items)) {
+        for (const item of data.items) {
+          const productId = item.productId || item.id;
+          if (productId) {
+            const qty = Number(item.quantity) || 1;
+            salesCounts[productId] = (salesCounts[productId] || 0) + qty;
+          }
+        }
+      }
+    });
+
+    res.json({ salesCounts });
+  } catch (err: any) {
+    console.error("Error calculating best sellers:", err);
+    res.status(500).json({ salesCounts: {} });
+  }
+});
+
 // مسار إرسال الطلبات وخصم المخزون بشكل آمن (محمي بالـ Limiter)
 app.post("/api/checkout", checkoutLimiter, async (req, res) => {
   try {

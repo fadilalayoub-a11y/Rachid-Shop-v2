@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+@layer base {
+  :root {
+    --font-cairo: 'Cairo', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  html {
+    font-family: var(--font-cairo);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: var(--font-cairo);
+  }
+
+  *, *::before, *::after {
+    font-family: inherit;
+  }
+
+  h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select, label {
+    font-family: var(--font-cairo);
+  }
+}
+
 /* Hide scrollbar for clean horizontal scrolling while maintaining swipe ability */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
@@ -7,4 +31,57 @@
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* Luxury Billboard advertising zoom-out effect */
+@keyframes billboardZoomOut {
+  0% {
+    transform: scale(1.10);
+  }
+  100% {
+    transform: scale(1.0);
+  }
+}
+
+.animate-billboard-zoom {
+  animation: billboardZoomOut 5.5s cubic-bezier(0.2, 0.8, 0.25, 1) forwards;
+  will-change: transform;
+}
+
+/* Continuous ticker / marquee animation for announcements */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marqueeRTL {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(50%);
+  }
+}
+
+.animate-marquee-ltr {
+  display: flex;
+  width: max-content;
+  animation: marquee 24s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-rtl {
+  display: flex;
+  width: max-content;
+  animation: marqueeRTL 24s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-ltr:hover,
+.animate-marquee-rtl:hover {
+  animation-play-state: paused;
 }

@@ -1,5 +1,7 @@
 import { Product } from '../../types';
 import { Package, ShieldAlert, Trash2, Edit, Search, X, Plus } from 'lucide-react';
+import { normalizeProductImageUrl } from '../../utils/image';
+import { STORE_SUBCATEGORIES } from '../../constants/categories';
 
 interface InventoryTabProps {
   products: Product[];
@@ -36,7 +38,7 @@ export function InventoryTab({
 }: InventoryTabProps) {
   return (
     <div className="space-y-6">
-      {/* Header with Quick Action */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900">إدارة المخزون والمنتجات</h2>
@@ -44,14 +46,6 @@ export function InventoryTab({
             تتبع كميات المقاسات المتوفرة بالمخزون، وتعديل الأسعار وحالات التوفر
           </p>
         </div>
-
-        <button
-          onClick={onGoToAddProduct}
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-colors shadow-sm self-start sm:self-auto cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          إضافة منتج جديد
-        </button>
       </div>
 
       {/* Quick Inventory Summary Cards */}
@@ -230,7 +224,7 @@ export function InventoryTab({
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-200">
-                          <img className="h-12 w-12 object-cover" src={product.image} alt={product.name} />
+                          <img className="h-12 w-12 object-cover" src={normalizeProductImageUrl(product.image)} alt={product.name} />
                         </div>
                         <div className="min-w-0">
                           <div className="text-sm font-bold text-gray-900 truncate max-w-[240px]">
@@ -245,13 +239,46 @@ export function InventoryTab({
                       </div>
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <span className="px-2.5 py-1 inline-flex text-xs font-semibold rounded-lg bg-gray-100 text-gray-700">
-                        {product.category === 'clothes'
-                          ? 'ملابس'
-                          : product.category === 'shoes'
-                          ? 'أحذية'
-                          : 'إكسسوارات'}
-                      </span>
+                      <div className="flex flex-col gap-1 items-start">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="px-2.5 py-1 inline-flex text-xs font-semibold rounded-lg bg-gray-100 text-gray-700">
+                            {product.category === 'clothes'
+                              ? 'ملابس'
+                              : product.category === 'shoes'
+                              ? 'أحذية'
+                              : 'إكسسوارات'}
+                          </span>
+                          {product.subcategory && (
+                            <span className="px-2 py-0.5 text-[11px] font-bold rounded-lg bg-amber-50 text-amber-800 border border-amber-200">
+                              {STORE_SUBCATEGORIES.find((s) => s.id === product.subcategory)?.nameAr || product.subcategory}
+                            </span>
+                          )}
+                        </div>
+                        {product.collections && product.collections.length > 0 && (
+                          <div className="flex flex-wrap gap-1 max-w-[140px]">
+                            {product.collections.map((colId) => {
+                              const label =
+                                colId === 'denim-casual'
+                                  ? 'جينز وكاجوال'
+                                  : colId === 'sportswear-gym'
+                                  ? 'رياضي'
+                                  : colId === 'summer-essentials'
+                                  ? 'صيفي'
+                                  : colId === 'watches-fragrances'
+                                  ? 'ساعات/عطور'
+                                  : colId;
+                              return (
+                                <span
+                                  key={colId}
+                                  className="text-[10px] font-bold bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded border border-blue-100"
+                                >
+                                  {label}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-900">
                       <span className="font-black">{product.price} درهم</span>
