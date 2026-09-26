@@ -28,6 +28,9 @@ export default function App() {
 
       {/* 5. لوحة التحكم */}
       <Route path="/admin" element={<Admin />} />
+      <Route path="/admin/products/create" element={<Admin defaultTab="add_product" />} />
+      <Route path="/admin/products" element={<Admin defaultTab="inventory" />} />
+      <Route path="/admin/orders" element={<Admin defaultTab="orders" />} />
 
       {/* 6. تحويل أي مسار غير معروف إلى الصفحة الرئيسية */}
       <Route path="*" element={<Navigate to="/" replace />} />

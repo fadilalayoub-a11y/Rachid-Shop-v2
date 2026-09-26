@@ -1,11 +1,8 @@
 {
-  "projectId": "rachid-shop-156c1",
-  "appId": "1:1028071014250:web:dc86206b1f4e5491e7af13",
   "apiKey": "AIzaSyCkFNLNyTuZ4j9Ie4T8wcdDsm76KrL_6K4",
   "authDomain": "rachid-shop-156c1.firebaseapp.com",
+  "projectId": "rachid-shop-156c1",
   "storageBucket": "rachid-shop-156c1.firebasestorage.app",
   "messagingSenderId": "1028071014250",
-  "measurementId": "",
-  "oAuthClientId": "",
-  "recaptchaSiteKey": ""
+  "appId": "1:1028071014250:web:dc86206b1f4e5491e7af13"
 }

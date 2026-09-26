@@ -140,11 +140,15 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
       const productRef = doc(db, 'products', product.id);
       await updateDoc(productRef, {
         name: name.trim(),
+        title: name.trim(),
         description: description.trim(),
         price: Number(price),
         originalPrice: originalPrice ? Number(originalPrice) : null,
+        compare_at_price: originalPrice ? Number(originalPrice) : null,
         category,
+        category_id: category,
         subcategory: subcategory.trim(),
+        subcategory_id: subcategory.trim(),
         collections,
         inventory: validInventory,
         image: primaryImageUrl,

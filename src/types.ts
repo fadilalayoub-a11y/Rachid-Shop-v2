@@ -1,18 +1,54 @@
+export type ProductStyle = 'streetwear' | 'classic' | 'sportswear' | 'casual';
+
+export type ProductBadge = 'none' | 'new' | 'sale' | 'best_seller' | 'trendy' | 'free_shipping';
+
+export interface ProductVariant {
+  id?: string;
+  color: string;
+  colorHex?: string;
+  size: string;
+  stock: number;
+  sku?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
+  title?: string; // Product Title
   description: string;
   price: number;
   originalPrice?: number | null;
+  compare_at_price?: number | null;
+  cost_price?: number | null;
+  sku?: string;
+
   category: 'clothes' | 'shoes' | 'accessories';
-  subcategory?: string; // e.g. 'jeans', 'jackets', 'trackpants', 'sneakers', 'watch', 'perfume'
+  category_id?: 'clothes' | 'shoes' | 'accessories';
+  subcategory?: string;
+  subcategory_id?: string;
+
   brand?: string;
+  brand_id?: string;
+  style?: ProductStyle;
+
+  badge?: ProductBadge;
   tags?: string[];
-  collections?: string[]; // e.g. ['denim-casual', 'sportswear-gym', 'summer-essentials', 'watches-fragrances']
+  collections?: string[];
+
+  colors?: string[];
+  sizes?: string[];
+  variants?: ProductVariant[];
+
   image: string;
   secondaryImage?: string | null;
   images?: string[];
   inventory?: { size: string; stock: number }[];
+
+  // SEO fields
+  meta_title?: string;
+  meta_description?: string;
+  slug?: string;
+
   isTrending?: boolean;
   salesCount?: number;
   createdAt?: any;

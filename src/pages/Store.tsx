@@ -11,6 +11,7 @@ import { SeoHead } from '../components/SeoHead';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSection } from '../components/ProductSection';
 import { ShopByCategories } from '../components/ShopByCategories';
+import { ShopByStyle } from '../components/ShopByStyle';
 import { FacetedFilter, FilterState } from '../components/FacetedFilter';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { CartDrawer } from '../components/CartDrawer';
@@ -268,6 +269,130 @@ export function Store({ initialTab }: StoreProps) {
     return availableProducts.filter(p => p.originalPrice && p.originalPrice > p.price);
   }, [availableProducts]);
 
+  // 3. الأكثر مبيعاً: 8 منتجات عشوائية ثابتة لكل زبون طوال اليوم وتتجدد تلقائياً في اليوم التالي
+  const bestSellers = useMemo(() => {
+    if (availableProducts.length === 0) return [];
+    if (availableProducts.length <= 8) return availableProducts;
+
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const STORAGE_KEY = 'souk_bestsellers_daily';
+
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.date === today && Array.isArray(parsed.productIds)) {
+          // جلب المنتجات المخزنة مسبقاً لهذا الزبون في نفس اليوم
+          const matched = parsed.productIds
+            .map((id: string) => availableProducts.find(p => p.id === id))
+            .filter(Boolean) as Product[];
+
+          if (matched.length >= 8) {
+            return matched.slice(0, 8);
+          }
+
+          // في حال حذف منتج أو نفاد مخزونه، يتم استكمال النقص حتى 8
+          const matchedIds = new Set(matched.map(p => p.id));
+          const remaining = availableProducts.filter(p => !matchedIds.has(p.id));
+          const fill = [...remaining].sort(() => 0.5 - Math.random()).slice(0, 8 - matched.length);
+          const combined = [...matched, ...fill];
+
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            date: today,
+            productIds: combined.map(p => p.id),
+          }));
+          return combined;
+        }
+      }
+    } catch {
+      // تجنب أي أخطاء في قراءة localStorage
+    }
+
+    // توليد 8 منتجات عشوائية لأول مرة وتثبيتها للزبون لهذا اليوم
+    const shuffled = [...availableProducts].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 8);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        date: today,
+        productIds: selected.map(p => p.id),
+      }));
+    } catch {
+      // Ignore
+    }
+
+    return selected;
+  }, [availableProducts]);
+
+  // 4. نظام تبويبات تصفية منتجات الصفحة الرئيسية (All, New Arrivals, Best Sellers, Sale)
+  const [homeProductFilter, setHomeProductFilter] = useState<'all' | 'new_arrivals' | 'best_sellers' | 'sale'>('all');
+
+  const homeFilteredProducts = useMemo(() => {
+    switch (homeProductFilter) {
+      case 'new_arrivals':
+        return newArrivals;
+      case 'best_sellers':
+        return bestSellers;
+      case 'sale':
+        return discountProducts;
+      case 'all':
+      default:
+        return availableProducts;
+    }
+  }, [homeProductFilter, newArrivals, bestSellers, discountProducts, availableProducts]);
+
+  const homeFilterTabs = useMemo(() => [
+    {
+      id: 'all' as const,
+      label: language === 'ar' ? 'الكل - All' : language === 'fr' ? 'Tous - All' : 'All',
+    },
+    {
+      id: 'new_arrivals' as const,
+      label: language === 'ar' ? 'وصل حديثاً - New Arrivals' : language === 'fr' ? 'Nouveautés - New Arrivals' : 'New Arrivals',
+    },
+    {
+      id: 'best_sellers' as const,
+      label: language === 'ar' ? 'الأكثر مبيعاً - Best Sellers' : language === 'fr' ? 'Meilleures Ventes' : 'Best Sellers',
+    },
+    {
+      id: 'sale' as const,
+      label: language === 'ar' ? 'العروض الخاصة - Special Offers / Sale' : language === 'fr' ? 'Offres Spéciales - Sale' : 'Special Offers / Sale',
+    },
+  ], [language]);
+
+  const homeSectionConfig = useMemo(() => {
+    switch (homeProductFilter) {
+      case 'new_arrivals':
+        return {
+          title: t.newArrivalsTitle,
+          subtitle: t.newArrivalsSubtitle,
+          badge: t.newBadge,
+          emptyMessage: t.noProductsAvailable,
+        };
+      case 'best_sellers':
+        return {
+          title: language === 'ar' ? 'الأكثر مبيعاً وإقبالاً' : language === 'fr' ? 'Meilleures Ventes' : 'Best Sellers',
+          subtitle: language === 'ar' ? 'القطع الأكثر طلباً وإقبالاً والمفضلة لدى زبائننا هذا اليوم' : language === 'fr' ? 'Nos pièces les plus demandées du jour' : 'Our most popular and highly requested pieces of the day',
+          badge: language === 'ar' ? 'الأكثر مبيعاً' : 'BEST SELLER',
+          emptyMessage: t.noProductsAvailable,
+        };
+      case 'sale':
+        return {
+          title: t.discountsTitle,
+          subtitle: t.discountsSubtitle,
+          badge: t.saleBadge,
+          emptyMessage: t.noDiscountsMessage,
+        };
+      case 'all':
+      default:
+        return {
+          title: t.allProductsTitle,
+          subtitle: t.allProductsSubtitle,
+          badge: undefined,
+          emptyMessage: t.noProductsAvailable,
+        };
+    }
+  }, [homeProductFilter, t, language]);
+
   // تحديد المنتجات المناسبة للمجموعة أو القسم الحالي قبل تطبيق الفلاتر
   const baseCollectionPool = useMemo(() => {
     if (activeCollection) {
@@ -426,7 +551,7 @@ export function Store({ initialTab }: StoreProps) {
         onSearchSubmit={scrollToProducts}
       />
 
-      <main className="flex-1 pb-16">
+      <main className="flex-1 pb-6 sm:pb-8">
         {/* البانر الرئيسي يظهر في الصفحة الرئيسية فقط عند عدم وجود بحث أو تصفح مجموعة */}
         {activeTab === 'home' && !activeCollection && !searchQuery && (
           <Hero onShopNow={scrollToProducts} />
@@ -505,25 +630,39 @@ export function Store({ initialTab }: StoreProps) {
               {/* قسم المجموعات الأربع المنتقاة: SHOP BY CATEGORIES (Denim & Casual, Sportswear, Summer, Watches & Fragrances) */}
               <ShopByCategories />
 
-              {/* القسم الأول: وصل حديثاً (8 إلى 12 منتج ديناميكياً عبر كافة التصنيفات) */}
+              {/* قسم منتجات الصفحة الرئيسية مع نظام تبويبات التصفية والسلايدر الأصلي */}
               <ProductSection 
-                title={t.newArrivalsTitle}
-                subtitle={t.newArrivalsSubtitle}
-                badge={t.newBadge}
-                products={newArrivals}
+                title={homeSectionConfig.title}
+                subtitle={homeSectionConfig.subtitle}
+                badge={homeSectionConfig.badge}
+                products={homeFilteredProducts}
                 onSelectProduct={handleSelectProduct}
-                emptyMessage={t.noProductsAvailable}
+                emptyMessage={homeSectionConfig.emptyMessage}
+                tabs={
+                  <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-1">
+                    {homeFilterTabs.map(tab => {
+                      const isActive = homeProductFilter === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setHomeProductFilter(tab.id)}
+                          className={`min-h-[42px] px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer shadow-xs active:scale-95 ${
+                            isActive
+                              ? 'bg-stone-950 text-white shadow-sm border border-stone-950 ring-2 ring-stone-950/10'
+                              : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-100 border border-stone-200/90'
+                          }`}
+                        >
+                          {tab.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                }
               />
 
-              {/* قسم العروض الخاصة (Special Offers / Sale Section) بدلاً من قسم جميع المنتجات */}
-              <ProductSection 
-                title={t.discountsTitle}
-                subtitle={t.discountsSubtitle}
-                badge={t.saleBadge}
-                products={discountProducts}
-                onSelectProduct={handleSelectProduct}
-                emptyMessage={t.noDiscountsMessage}
-              />
+              {/* قسم تسوق حسب الستايل والمظهر: كلاسيكي، لبس الشارع، رياضي، كاجوال */}
+              <ShopByStyle />
             </div>
           ) : (
             /* 2. صفحة مجموعة منتقاة أو قسم رئيسي (ملابس، أحذية، إكسسوارات) مع نظام الفلترة البارز بالمقاس */

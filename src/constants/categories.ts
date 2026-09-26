@@ -135,6 +135,29 @@ export const STORE_SUBCATEGORIES: SubcategoryOption[] = [
   },
 ];
 
+export interface MainCategoryOption {
+  id: 'clothes' | 'shoes' | 'accessories';
+  nameAr: string;
+  nameEn: string;
+  nameFr: string;
+}
+
+export const MAIN_CATEGORIES: MainCategoryOption[] = [
+  { id: 'clothes', nameAr: 'ملابس (Clothes)', nameEn: 'Clothes', nameFr: 'Vêtements' },
+  { id: 'shoes', nameAr: 'أحذية (Shoes)', nameEn: 'Shoes', nameFr: 'Chaussures' },
+  { id: 'accessories', nameAr: 'إكسسوارات (Accessories)', nameEn: 'Accessories', nameFr: 'Accessoires' },
+];
+
+export const isValidSubcategoryForCategory = (
+  categoryId: 'clothes' | 'shoes' | 'accessories',
+  subcategoryId: string
+): boolean => {
+  return STORE_SUBCATEGORIES.some(
+    (item) => item.category === categoryId && item.id === subcategoryId
+  );
+};
+
 export const getSubcategoriesForCategory = (category: 'clothes' | 'shoes' | 'accessories') => {
   return STORE_SUBCATEGORIES.filter((item) => item.category === category);
 };
+

@@ -126,6 +126,81 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
       'محفظة', 'حزام', 'حلي', 'إكسسوار', 'accessoire'
     ],
   },
+  {
+    id: 'classic-style',
+    slug: 'classic-style',
+    nameEn: 'Classic Style',
+    nameAr: 'ستايل كلاسيكي',
+    nameFr: 'Style Classique',
+    subtitleEn: 'Refined Formal Shirts, Tailored Trousers & Leather Footwear',
+    subtitleAr: 'أناقة رسمية راقية: قمصان فخمة، سراويل قماش وأحذية جلدية كلاسيكية',
+    subtitleFr: 'Chemises Élégantes, Pantalons & Chaussures Habillées',
+    targetItemsEn: 'Shirts, Tailored Trousers, Formal Leather Shoes, Watches',
+    targetItemsAr: 'قمصان رسمية، سراويل قماشية، أحذية جلدية وساعات راقية',
+    targetAudienceAr: 'عشاق الأناقة الرسمية والرقي في المناسبات وبيئة العمل',
+    seoDescriptionAr: 'تسوق تشكيلة الملابس الكلاسيكية للرجال من متجرنا: قمصان راقية، أحذية جلدية وساعات كلاسيكية.',
+    seoDescriptionEn: 'Explore classic men\'s collection: tailored shirts, formal trousers and premium leather footwear.',
+    categoryTypes: [
+      { id: 'shirt', nameAr: 'قمصان كلاسيكية', nameEn: 'Classic Shirts' },
+      { id: 'trousers', nameAr: 'سراويل قماش', nameEn: 'Trousers' },
+      { id: 'casual-shoe', nameAr: 'أحذية جلدية رسمية', nameEn: 'Formal Shoes' },
+      { id: 'watch', nameAr: 'ساعات يد', nameEn: 'Watches' },
+    ],
+    keywords: [
+      'كلاسيك', 'كلاسيكي', 'classic', 'classique', 'رسمي', 'formal',
+      'قميص', 'chemise', 'shirt', 'جلد', 'لوفر', 'mocassin', 'حذاء كلاسيكي'
+    ],
+  },
+  {
+    id: 'old-money',
+    slug: 'old-money',
+    nameEn: 'Old Money',
+    nameAr: 'أولد ماني',
+    nameFr: 'Old Money',
+    subtitleEn: 'Timeless Elegance, Quiet Luxury & Prestigious Aesthetics',
+    subtitleAr: 'فخامة هادئة، خامات كتان وبولو فاخرة، وأناقة أرستقراطية متوارثة',
+    subtitleFr: 'Élégance Intemporelle & Luxe Discret',
+    targetItemsEn: 'Polo Shirts, Linen Shirts, Neutral Knitwear, Loafers, Minimal Watches',
+    targetItemsAr: 'تيشيرتات بولو، قمصان كتان، أحذية موكاسان لوفر، وساعات مينيمال',
+    targetAudienceAr: 'عشاق ستايل الأولد ماني والفخامة الهادئة ذات الطابع الملكي',
+    seoDescriptionAr: 'تشكيلة أولد ماني الحصرية: ملابس رجالية تجمع بين الفخامة الهادئة والأناقة الكلاسيكية الخالدة.',
+    seoDescriptionEn: 'Discover the Old Money aesthetic for men: quiet luxury, premium linen, refined polo shirts and loafers.',
+    categoryTypes: [
+      { id: 'shirt', nameAr: 'قمصان وبولو راقية', nameEn: 'Polos & Shirts' },
+      { id: 'casual-shoe', nameAr: 'أحذية لوفر وموكاسان', nameEn: 'Loafers' },
+      { id: 'trousers', nameAr: 'سراويل شينو وقماش', nameEn: 'Trousers' },
+      { id: 'watch', nameAr: 'ساعات راقية', nameEn: 'Luxury Watches' },
+    ],
+    keywords: [
+      'أولد ماني', 'اولد ماني', 'old money', 'quiet luxury', 'polo', 'بولو',
+      'كتان', 'linen', 'لوفر', 'loafer', 'loafers', 'موكاسان', 'كشمير', 'cashmere'
+    ],
+  },
+  {
+    id: 'streetwear',
+    slug: 'streetwear',
+    nameEn: 'Streetwear',
+    nameAr: 'لبس الشارع',
+    nameFr: 'Streetwear',
+    subtitleEn: 'Urban Culture, Oversized Fits & Contemporary Street Trends',
+    subtitleAr: 'ثقافة الشارع العصرية: قصات أوفرسايز، ستايل أوربان، هوديز وسنيكرز حصرية',
+    subtitleFr: 'Mode Urbaine, Coupes Oversize & Sneakers',
+    targetItemsEn: 'Oversized Tees, Heavyweight Hoodies, Cargo Pants, Sneakers, Caps',
+    targetItemsAr: 'تيشيرتات أوفرسايز، هوديز قطنية سميكة، بناطيل كارجو، وسنيكرز',
+    targetAudienceAr: 'عشاق الموضة الشبابية وإطلالات الشارع الجريئة والمميزة',
+    seoDescriptionAr: 'أحدث تشكيلات لبس الشارع (ستريت وير) والملابس الحضرية الأوفرسايز للرجال بجودة استثنائية وأسعار مميزة.',
+    seoDescriptionEn: 'Shop modern men\'s streetwear: oversized graphic tees, heavyweight hoodies, cargo pants and sneakers.',
+    categoryTypes: [
+      { id: 'hoodies', nameAr: 'هوديز وسويت شيرت', nameEn: 'Hoodies' },
+      { id: 'jacket', nameAr: 'جواكت أوربان وبومبر', nameEn: 'Urban Jackets' },
+      { id: 'sneakers', nameAr: 'سنيكرز وتريندات', nameEn: 'Sneakers' },
+      { id: 'caps', nameAr: 'قبعات وكابات', nameEn: 'Caps' },
+    ],
+    keywords: [
+      'لبس الشارع', 'لبس شارع', 'ستريت وير', 'ستريت', 'streetwear', 'street', 'أوفرسايز', 'اوفرسايز',
+      'oversize', 'oversized', 'hoodie', 'هودي', 'كارجو', 'cargo', 'سنيكرز', 'كاب', 'cap'
+    ],
+  },
 ];
 
 /**

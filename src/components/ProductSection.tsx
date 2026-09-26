@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect, ReactNode } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
@@ -11,6 +11,7 @@ interface ProductSectionProps {
   onSelectProduct: (product: Product) => void;
   badge?: string;
   emptyMessage?: string;
+  tabs?: ReactNode;
 }
 
 export function ProductSection({
@@ -20,9 +21,17 @@ export function ProductSection({
   onSelectProduct,
   badge,
   emptyMessage,
+  tabs,
 }: ProductSectionProps) {
   const { t, isRTL } = useLanguage();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll back to start when filtered products change
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+    }
+  }, [products]);
 
   const scroll = (direction: 'prev' | 'next') => {
     if (scrollContainerRef.current) {
@@ -35,7 +44,7 @@ export function ProductSection({
   };
 
   if (products.length === 0) {
-    if (!emptyMessage) return null;
+    if (!emptyMessage && !tabs) return null;
     return (
       <section className="mb-9 sm:mb-12">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-5 gap-3">
@@ -51,8 +60,16 @@ export function ProductSection({
             <p className="mt-1 text-xs sm:text-sm text-stone-500">{subtitle}</p>
           </div>
         </div>
-        <div className="text-center py-10 px-4 bg-white rounded-2xl border border-stone-200/80 text-stone-500 text-sm">
-          {emptyMessage}
+
+        {/* Tabs navigation */}
+        {tabs && (
+          <div className="mb-6">
+            {tabs}
+          </div>
+        )}
+
+        <div className="text-center py-12 px-4 bg-white rounded-2xl border border-stone-200/80 text-stone-500 text-sm">
+          {emptyMessage || t.noProductsAvailable}
         </div>
       </section>
     );
@@ -97,6 +114,13 @@ export function ProductSection({
           </button>
         </div>
       </div>
+
+      {/* Tabs navigation */}
+      {tabs && (
+        <div className="mb-6">
+          {tabs}
+        </div>
+      )}
 
       {/* Horizontal Carousel with 16px-20px side gutters */}
       <div className="relative -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">

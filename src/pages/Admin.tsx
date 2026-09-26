@@ -1,13 +1,12 @@
-import { useState, useEffect, useMemo, FormEvent } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   collection,
   onSnapshot,
   query,
   orderBy,
-  addDoc,
   deleteDoc,
   doc,
-  serverTimestamp,
 } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { db, auth } from '../lib/firebase';
@@ -27,30 +26,57 @@ import {
   CategoryImagesTab,
 } from './admin';
 
-export function Admin() {
+interface AdminProps {
+  defaultTab?: AdminTabType;
+}
+
+export function Admin({ defaultTab }: AdminProps) {
   const { user, isAdmin, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [pendingOrdersCount, setPendingOrdersCount] = useState(0);
-  const [adminTab, setAdminTab] = useState<AdminTabType>('inventory');
+
+  const initialTab = useMemo<AdminTabType>(() => {
+    if (defaultTab) return defaultTab;
+    if (location.pathname === '/admin/products/create') return 'add_product';
+    if (location.pathname === '/admin/orders') return 'orders';
+    if (location.pathname === '/admin/products') return 'inventory';
+    return 'inventory';
+  }, [defaultTab, location.pathname]);
+
+  const [adminTab, setAdminTab] = useState<AdminTabType>(initialTab);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Sync tab with route changes
+  useEffect(() => {
+    if (location.pathname === '/admin/products/create') {
+      setAdminTab('add_product');
+    } else if (location.pathname === '/admin/orders') {
+      setAdminTab('orders');
+    } else if (location.pathname === '/admin/products') {
+      setAdminTab('inventory');
+    }
+  }, [location.pathname]);
+
+  const handleTabChange = (tab: AdminTabType) => {
+    setAdminTab(tab);
+    if (tab === 'add_product') {
+      navigate('/admin/products/create');
+    } else if (tab === 'inventory') {
+      navigate('/admin/products');
+    } else if (tab === 'orders') {
+      navigate('/admin/orders');
+    } else {
+      navigate('/admin');
+    }
+  };
 
   // Search and inventory filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [stockFilter, setStockFilter] = useState<'all' | 'in_stock' | 'low_stock' | 'out_of_stock'>('all');
   const [categoryFilter, setCategoryFilter] = useState<'all' | 'clothes' | 'shoes' | 'accessories'>('all');
-
-  // Form state
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
-  const [originalPrice, setOriginalPrice] = useState('');
-  const [inventory, setInventory] = useState<{ size: string; stock: string }[]>([{ size: '', stock: '' }]);
-  const [category, setCategory] = useState<'clothes' | 'shoes' | 'accessories'>('clothes');
-  const [subcategory, setSubcategory] = useState('t-shirts');
-  const [collectionsList, setCollectionsList] = useState<string[]>([]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formMessage, setFormMessage] = useState({ type: '', text: '' });
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const handleLogout = () => signOut(auth);
@@ -151,105 +177,6 @@ export function Admin() {
     return { totalItems, outOfStockCount, lowStockCount };
   }, [products]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setFormMessage({ type: '', text: '' });
-
-    if (imageFiles.length === 0 || !name || !description || !price) {
-      setFormMessage({ type: 'error', text: 'يرجى تعبئة جميع الحقول وإرفاق صورة واحدة على الأقل للمنتج' });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      // 1. Get Signature from secure Serverless Function
-      const signatureRes = await fetch('/api/cloudinary-sign');
-      const signatureData = await signatureRes.json();
-
-      if (!signatureRes.ok) {
-        throw new Error(signatureData.error || 'فشل الحصول على تصريح رفع الصورة');
-      }
-
-      const { timestamp, signature, apiKey, cloudName } = signatureData;
-      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-
-      // 2. Upload All Selected Images in parallel/sequence to Cloudinary
-      const uploadedUrls: string[] = [];
-      for (const file of imageFiles) {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('api_key', apiKey);
-        formData.append('timestamp', timestamp.toString());
-        formData.append('signature', signature);
-
-        const response = await fetch(cloudinaryUrl, {
-          method: 'POST',
-          body: formData,
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.secure_url) {
-          throw new Error(data.error?.message || 'خطأ أثناء رفع إحدى الصور');
-        }
-
-        uploadedUrls.push(data.secure_url);
-      }
-
-      const primaryImageUrl = uploadedUrls[0];
-      const secondaryImageUrl = uploadedUrls.length > 1 ? uploadedUrls[1] : null;
-
-      // 3. Save Product to Firestore
-      const validInventory = inventory
-        .filter((item) => item.size.trim() !== '')
-        .map((item) => ({
-          size: item.size.trim(),
-          stock: item.stock ? Number(item.stock) : 0,
-        }));
-
-      await addDoc(collection(db, 'products'), {
-        name,
-        description,
-        price: Number(price),
-        originalPrice: originalPrice ? Number(originalPrice) : null,
-        inventory: validInventory,
-        category,
-        subcategory,
-        collections: collectionsList,
-        image: primaryImageUrl,
-        secondaryImage: secondaryImageUrl,
-        images: uploadedUrls,
-        createdAt: serverTimestamp(),
-      });
-
-      // Reset form
-      setName('');
-      setDescription('');
-      setPrice('');
-      setOriginalPrice('');
-      setInventory([{ size: '', stock: '' }]);
-      setCategory('clothes');
-      setSubcategory('t-shirts');
-      setCollectionsList([]);
-      setImageFiles([]);
-      setFormMessage({ type: 'success', text: 'تمت إضافة المنتج بنجاح!' });
-    } catch (error: any) {
-      console.error('Error adding product:', error);
-      if (error.code === 'permission-denied') {
-        setFormMessage({
-          type: 'error',
-          text: 'لا تملك الصلاحية لإضافة منتجات. يرجى تعديل Firestore Rules أولاً.',
-        });
-      } else {
-        setFormMessage({
-          type: 'error',
-          text: `حدث خطأ أثناء إضافة المنتج: ${error.message}`,
-        });
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const confirmDelete = async (id: string) => {
     try {
       await deleteDoc(doc(db, 'products', id));
@@ -274,7 +201,7 @@ export function Admin() {
           {/* Navigation Tabs */}
           <AdminTabsNav
             currentTab={adminTab}
-            onTabChange={setAdminTab}
+            onTabChange={handleTabChange}
             productsCount={products.length}
             pendingOrdersCount={pendingOrdersCount}
           />
@@ -285,30 +212,8 @@ export function Admin() {
           {/* Tab 2: Add Product */}
           {adminTab === 'add_product' && (
             <AddProductTab
-              name={name}
-              setName={setName}
-              description={description}
-              setDescription={setDescription}
-              price={price}
-              setPrice={setPrice}
-              originalPrice={originalPrice}
-              setOriginalPrice={setOriginalPrice}
-              inventory={inventory}
-              setInventory={setInventory}
-              category={category}
-              setCategory={setCategory}
-              subcategory={subcategory}
-              setSubcategory={setSubcategory}
-              collections={collectionsList}
-              setCollections={setCollectionsList}
-              imageFiles={imageFiles}
-              setImageFiles={setImageFiles}
-              isSubmitting={isSubmitting}
-              formMessage={formMessage}
-              setFormMessage={setFormMessage}
               productsCount={products.length}
-              onGoToInventory={() => setAdminTab('inventory')}
-              onSubmit={handleSubmit}
+              onGoToInventory={() => handleTabChange('inventory')}
             />
           )}
 
@@ -326,7 +231,7 @@ export function Admin() {
               inventoryStats={inventoryStats}
               onEditProduct={(p) => setEditingProduct(p)}
               onDeleteProduct={(id) => setProductToDelete(id)}
-              onGoToAddProduct={() => setAdminTab('add_product')}
+              onGoToAddProduct={() => handleTabChange('add_product')}
             />
           )}
 
