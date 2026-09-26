@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. إعدادات المتجر (صور البانر والأقسام)
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 2. المنتجات (القراءة للجميع، والتعديل للمسجلين كمديرين أو للمصادق عليهم)
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // 3. الطلبات (العملاء يمكنهم إنشاء طلبات، والإدارة يمكنها القراءة والتعديل)
+    match /orders/{orderId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    // 4. قائمة الانتظار للمنتجات غير المتوفرة
+    match /waitlist/{entryId} {
+      allow create: if true;
+      allow read, write: if request.auth != null;
+    }
+
+    // 5. بيانات المستخدمين
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 6. قائمة المديرين
+    match /admins/{adminId} {
+      allow read: if request.auth != null;
+      allow write: if false; // حماية قائمة المديرين من التعديل من جهة العميل
+    }
+  }
+}

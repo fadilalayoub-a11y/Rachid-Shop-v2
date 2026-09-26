@@ -48,16 +48,23 @@ app.get("/api/cloudinary-sign", (req, res) => {
   });
 });
 
+import defaultFirebaseConfig from "../firebase-applet-config.json";
+
 // دالة مبدئية لتعريف Firebase Admin باستخدام متغيرات البيئة
 let adminDb: FirebaseFirestore.Firestore | null = null;
 function getAdminDb() {
   if (!adminDb) {
-    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const projectId = process.env.FIREBASE_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || defaultFirebaseConfig.projectId;
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'); // إصلاح مشكلة الأسطر الجديدة
+    
+    // تنقية المفتاح الخاص من أي علامات اقتباس محيطة وإصلاح أسطر \n المشفرة
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    if (privateKey) {
+      privateKey = privateKey.replace(/^["']|["']$/g, '').replace(/\\n/g, '\n');
+    }
 
     if (!projectId || !clientEmail || !privateKey) {
-      throw new Error("Missing Firebase Admin credentials");
+      throw new Error("Missing Firebase Admin credentials (FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY, FIREBASE_PROJECT_ID)");
     }
 
     if (getApps().length === 0) {

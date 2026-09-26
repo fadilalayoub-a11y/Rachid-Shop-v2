@@ -102,13 +102,13 @@ export function ProductSection({
       <div className="relative -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div 
           ref={scrollContainerRef}
-          className="flex gap-3.5 sm:gap-5 overflow-x-auto pb-5 pt-1.5 snap-x snap-mandatory scroll-smooth no-scrollbar"
+          className="flex gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto pb-5 pt-1 snap-x snap-mandatory scroll-smooth no-scrollbar"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {products.map(product => (
             <div 
               key={product.id}
-              className="w-[200px] xs:w-[220px] sm:w-[250px] shrink-0 snap-start flex flex-col transition-transform duration-200"
+              className="w-[185px] xs:w-[205px] sm:w-[225px] shrink-0 snap-start flex flex-col transition-transform duration-200"
             >
               <ProductCard 
                 product={product} 

@@ -251,7 +251,7 @@ export async function injectSeoTags(htmlTemplate: string, requestUrl: string, ho
             <h1 class="text-2xl sm:text-3xl font-extrabold text-stone-950 mb-2">${title.split(' - ')[0]}</h1>
             <p class="text-stone-600">${description}</p>
           </header>
-          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-7 lg:gap-8">
             ${sampleProducts.map(p => `
               <div class="bg-white rounded-2xl p-3 border border-stone-200/80 shadow-xs flex flex-col justify-between">
                 <div>

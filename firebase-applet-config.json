@@ -1,11 +1,11 @@
 {
-  "projectId": "airy-bank-nf6jr",
-  "appId": "1:775648099457:web:cf9cbd459622b083296180",
-  "apiKey": "AIzaSyBG2ZKOHhRzF79_WqXdjmAqnSiyUG3oSvs",
-  "authDomain": "airy-bank-nf6jr.firebaseapp.com",
-  "storageBucket": "airy-bank-nf6jr.firebasestorage.app",
-  "messagingSenderId": "775648099457",
+  "projectId": "rachid-shop-156c1",
+  "appId": "1:1028071014250:web:dc86206b1f4e5491e7af13",
+  "apiKey": "AIzaSyCkFNLNyTuZ4j9Ie4T8wcdDsm76KrL_6K4",
+  "authDomain": "rachid-shop-156c1.firebaseapp.com",
+  "storageBucket": "rachid-shop-156c1.firebasestorage.app",
+  "messagingSenderId": "1028071014250",
   "measurementId": "",
-  "oAuthClientId": "775648099457-s0vm7hbek0l81i28oia32380qugqu174.apps.googleusercontent.com",
+  "oAuthClientId": "",
   "recaptchaSiteKey": ""
 }
