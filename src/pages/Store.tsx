@@ -16,6 +16,7 @@ import { FacetedFilter, FilterState } from '../components/FacetedFilter';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { CartDrawer } from '../components/CartDrawer';
 import { CheckoutModal } from '../components/CheckoutModal';
+import { TrustGuarantees } from '../components/TrustGuarantees';
 import { Footer } from '../components/Footer';
 import { LIFESTYLE_COLLECTIONS, isProductInCollection } from '../utils/collections';
 
@@ -745,6 +746,9 @@ export function Store({ initialTab }: StoreProps) {
           )}
         </div>
       </main>
+
+      {/* ضمانات المتجر وميزات التسوق */}
+      <TrustGuarantees />
 
       <Footer />
 

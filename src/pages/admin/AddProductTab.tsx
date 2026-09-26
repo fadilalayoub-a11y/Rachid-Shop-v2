@@ -154,7 +154,7 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
   const [badge, setBadge] = useState<ProductBadge>('none');
   const [tagInput, setTagInput] = useState('');
   const [tagsList, setTagsList] = useState<string[]>(['أصلي', 'مريح']);
-  const [collectionsList, setCollectionsList] = useState<string[]>(['denim-casual']);
+  const [collectionsList, setCollectionsList] = useState<string[]>([]);
 
   // E. Media
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -1297,47 +1297,6 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
                     +{t}
                   </button>
                 ))}
-              </div>
-            </div>
-
-            {/* Optional Collections Checkboxes */}
-            <div className="pt-2 border-t border-gray-100">
-              <label className="block text-xs font-bold text-gray-700 mb-2">
-                ربط المنتج بالمجموعات والتشكيلات الترويجية (Store Collections):
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { id: 'denim-casual', label: 'جينز وكاجوال' },
-                  { id: 'sportswear-gym', label: 'ملابس رياضية' },
-                  { id: 'summer-essentials', label: 'أساسيات الصيف' },
-                  { id: 'watches-fragrances', label: 'ساعات وعطور' },
-                ].map((col) => {
-                  const isChecked = collectionsList.includes(col.id);
-                  return (
-                    <label
-                      key={col.id}
-                      className={`flex items-center gap-2 p-2 rounded-xl border text-xs font-bold cursor-pointer select-none ${
-                        isChecked
-                          ? 'bg-blue-50/80 border-blue-300 text-blue-900'
-                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setCollectionsList((prev) => [...prev, col.id]);
-                          } else {
-                            setCollectionsList((prev) => prev.filter((c) => c !== col.id));
-                          }
-                        }}
-                        className="w-3.5 h-3.5 text-blue-600 rounded cursor-pointer"
-                      />
-                      <span>{col.label}</span>
-                    </label>
-                  );
-                })}
               </div>
             </div>
           </div>

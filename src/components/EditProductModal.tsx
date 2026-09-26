@@ -288,51 +288,6 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
               </div>
             </div>
 
-            {/* تحديد المجموعات (Collections) */}
-            <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-200/80">
-              <label className="block text-sm font-bold text-gray-800 mb-1">
-                المجموعات والتشكيلات التابع لها المنتج
-              </label>
-              <p className="text-xs text-gray-500 mb-2.5">
-                حدد المجموعة ليظهر المنتج داخلها تلقائياً
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {[
-                  { id: 'denim-casual', label: 'جينز وكاجوال (Denim & Casual)' },
-                  { id: 'sportswear-gym', label: 'ملابس رياضية (Sportswear & Gym)' },
-                  { id: 'summer-essentials', label: 'أساسيات الصيف (Summer Essentials)' },
-                  { id: 'watches-fragrances', label: 'ساعات وعطور (Watches & Fragrances)' },
-                ].map((item) => {
-                  const isChecked = collections.includes(item.id);
-                  return (
-                    <label
-                      key={item.id}
-                      className={`flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer text-xs font-bold select-none ${
-                        isChecked
-                          ? 'bg-blue-50 border-blue-300 text-blue-900 shadow-2xs'
-                          : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setCollections(prev => [...prev, item.id]);
-                          } else {
-                            setCollections(prev => prev.filter(c => c !== item.id));
-                          }
-                        }}
-                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
-                      />
-                      <span>{item.label}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Inventory (Sizes and Stock) */}
             <div className="bg-gray-50/70 p-4 rounded-2xl border border-gray-100">
               <label className="block text-sm font-bold text-gray-800 mb-3">
