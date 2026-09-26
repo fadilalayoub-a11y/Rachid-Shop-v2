@@ -310,7 +310,7 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
           <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-4 sm:gap-6">
             <button 
               onClick={onShopNow}
-              className="bg-white hover:bg-stone-100 text-stone-950 px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 flex items-center gap-3 cursor-pointer group/btn"
+              className="bg-[#3B4A3F] hover:bg-[#2d3a31] text-white px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-sm sm:text-base tracking-wide transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 flex items-center gap-3 cursor-pointer group/btn border border-white/20"
             >
               <span>{displayCta}</span>
               {isRTL ? (

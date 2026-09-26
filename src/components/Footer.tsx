@@ -6,7 +6,7 @@ export function Footer() {
   const { t } = useLanguage();
 
   return (
-    <footer className="bg-stone-50/80 border-t border-stone-200/80 mt-14 sm:mt-20">
+    <footer className="bg-[#f8f8fa] border-t border-stone-200 mt-14 sm:mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* 1. الشريط الرئيسي العلوي */}

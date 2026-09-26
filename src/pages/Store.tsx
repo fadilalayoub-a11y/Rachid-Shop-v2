@@ -404,7 +404,7 @@ export function Store({ initialTab }: StoreProps) {
   }, [activeCollection, language, t]);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] font-sans text-stone-900 flex flex-col">
+    <div className="min-h-screen bg-[#f8f8fa] font-sans text-[#222222] flex flex-col">
       {/* Dynamic SEO & Schema.org Structured Data */}
       <SeoHead 
         category={activeCollection ? 'collection' : activeTab}

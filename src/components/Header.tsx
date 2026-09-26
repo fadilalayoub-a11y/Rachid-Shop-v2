@@ -158,7 +158,7 @@ export function Header({
   ] as const;
 
   return (
-    <header className="bg-white/95 backdrop-blur-md border-b border-stone-200/80 shadow-xs sticky top-0 z-40 transition-shadow">
+    <header className="bg-[#f8f8fa]/95 backdrop-blur-md border-b border-stone-200/80 shadow-xs sticky top-0 z-40 transition-shadow">
       {/* الشريط الإعلاني العلوي باللغات الرسمية للموقع */}
       <AnnouncementBar />
 
@@ -304,8 +304,8 @@ export function Header({
                 }}
                 className={`px-3.5 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === tab.id && !searchQuery
-                    ? 'text-stone-950 bg-stone-100 shadow-2xs'
-                    : 'text-stone-600 hover:text-stone-950 hover:bg-stone-50'
+                    ? 'text-[#222222] bg-stone-200/60 shadow-2xs'
+                    : 'text-[#222222] hover:bg-stone-100/80'
                 }`}
               >
                 {tab.label}
