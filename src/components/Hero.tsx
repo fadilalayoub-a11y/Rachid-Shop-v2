@@ -6,70 +6,92 @@ import {
   ArrowLeft, 
   ArrowRight, 
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
   ChevronDown
 } from 'lucide-react';
 import { HeroSlide } from '../types';
 import { translateHeroText } from '../utils/heroTranslation';
-import bannerImg from '../assets/images/fashion_hero_banner_1790524651226.jpg';
+import bannerImg from '../assets/images/mens_welcome_banner_1790535183238.jpg';
 
 export const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   {
-    image: bannerImg,
-    badge: 'تخفيضات حصرية',
-    title: 'تشكيلة حصرية: خصم يصل إلى 50%',
-    subtitle: 'اكتشف أحدث التصاميم وأكثرها طلباً بأعلى معايير الجودة والأناقة. العرض سارٍ لفترة محدودة.',
-    ctaText: 'تسوق العروض',
-    title_en: 'EXCLUSIVE COLLECTION: UP TO 50% OFF',
-    subtitle_en: 'Discover our most sought-after styles. Valid for a limited time.',
-    ctaText_en: 'Shop offers',
-    title_fr: 'COLLECTION EXCLUSIVE : JUSQU’À -50%',
-    subtitle_fr: 'Découvrez nos pièces les plus convoitées. Offre à durée limitée.',
-    ctaText_fr: 'Découvrir les offres'
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2400&auto=format&fit=crop',
+    image: '/mens_welcome_banner.jpg',
     badge: '',
-    title: 'اكتشف أحدث صيحات الموضة',
-    subtitle: 'تشكيلة رائعة من الملابس والأحذية العصرية التي تناسب ذوقك وتمنحك إطلالة فريدة ومتميزة في كل مناسبة.',
-    ctaText: 'تسوق الآن'
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2400&auto=format&fit=crop',
-    badge: '',
-    title: 'أناقة لا مثيل لها',
-    subtitle: 'تصاميم مختارة بعناية فائقة لتجمع بين الجودة العالية والراحة اليومية.',
-    ctaText: 'استكشف المجموعة'
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=2400&auto=format&fit=crop',
-    badge: '',
-    title: 'تخفيضات وعروض حصرية',
-    subtitle: 'استمتع بأفضل الأسعار وأقوى العروض على التشكيلات الأكثر طلباً.',
-    ctaText: 'تسوق العروض'
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2400&auto=format&fit=crop',
-    badge: '',
-    title: 'إطلالة عصرية تناسب أسلوبك',
-    subtitle: 'كل ما تحتاجه لتجديد مظهرك العصري في مكان واحد وبأفضل جودة.',
-    ctaText: 'اكتشف المزيد'
+    title: 'عالم متكامل من الأناقة والتميز',
+    subtitle: 'اكتشف تشكيلتنا المتنوعة من أرقى الملابس العصرية، الأحذية الفاخرة، والإكسسوارات المصممة لتناسب ذوقك الرفيع في كل إطلالة.',
+    ctaText: 'استكشف التشكيلة',
+    badge_en: '',
+    title_en: 'A Complete World of Refined Style',
+    subtitle_en: 'Explore our curated collection of contemporary apparel, premium footwear, and elegant accessories for every occasion.',
+    ctaText_en: 'Explore Collection',
+    badge_fr: '',
+    title_fr: 'Tout l’univers de l’élégance',
+    subtitle_fr: 'Découvrez notre collection raffinée de prêt-à-porter, chaussures haut de gamme et accessoires exclusifs.',
+    ctaText_fr: 'Découvrir la collection',
+    contentPosition: 'start',
+    verticalAlign: 'bottom',
+    textAlign: 'start',
+    maxWidthPercent: 55,
+    textSpreadMode: 'grouped',
+    textColorTheme: 'light',
+    fontFamily: 'sans',
+    titleSize: 'xlarge',
+    overlayStyle: 'charcoal-gradient',
+    ctaStyle: 'white-solid',
+    ctaLink: '#products'
   }
 ];
 
 export const DEFAULT_HERO_IMAGES = DEFAULT_HERO_SLIDES.map(s => s.image);
-export const HERO_STORAGE_KEY = 'rachid_shop_hero_images';
-export const HERO_SLIDES_STORAGE_KEY = 'rachid_shop_hero_slides';
+export const HERO_STORAGE_KEY = 'rachid_shop_hero_images_v5';
+export const HERO_SLIDES_STORAGE_KEY = 'rachid_shop_hero_slides_v5';
+
+// Check if image is one of the obsolete demo/placeholder images
+export function isObsoleteDemoImage(img: string): boolean {
+  if (!img || typeof img !== 'string') return true;
+  if (img.includes('fashion_hero_banner_1790524651226')) return true;
+  if (img.includes('photo-1490481651871-ab68de25d43d')) return true;
+  if (img.includes('photo-1441986300917-64674bd600d8')) return true;
+  if (img.includes('photo-1445205170230-053b83016050')) return true;
+  if (img.includes('photo-1469334031218-e382a71b716b')) return true;
+  return false;
+}
+
+// Helper to filter out any unwanted or obsolete badges
+export function sanitizeHeroBadge(badge: string | undefined): string {
+  if (!badge) return '';
+  const trimmed = badge.trim();
+  if (
+    trimmed === 'تشكيلة الموسم الجديد 2026' ||
+    trimmed === 'Nouvelle Collection 2026' ||
+    trimmed === 'New Season Collection 2026' ||
+    trimmed.includes('مرحب') ||
+    trimmed.includes('رشيد') ||
+    trimmed.includes('Welcome') ||
+    trimmed.includes('Bienvenue')
+  ) {
+    return '';
+  }
+  return trimmed;
+}
 
 // Helper to normalize slides from raw data
 export function normalizeHeroSlides(data: any): HeroSlide[] {
   if (!data) return DEFAULT_HERO_SLIDES;
 
   if (Array.isArray(data.slides) && data.slides.length > 0) {
-    return data.slides.map((s: any, idx: number) => {
-      const rawBadge = (s.badge ?? '').trim();
-      const cleanBadge = (rawBadge === 'تشكيلة الموسم الجديد 2026' || rawBadge === 'Nouvelle Collection 2026' || rawBadge === 'New Season Collection 2026') 
-        ? '' 
-        : rawBadge;
+    const validSlides = data.slides.filter((s: any) => {
+      const rawImg = typeof s === 'string' ? s : s?.image;
+      return !isObsoleteDemoImage(rawImg);
+    });
+
+    if (validSlides.length === 0) {
+      return DEFAULT_HERO_SLIDES;
+    }
+
+    return validSlides.map((s: any, idx: number) => {
+      const cleanBadge = sanitizeHeroBadge(s.badge);
 
       const rawImg = typeof s === 'string' ? s : s?.image;
       const defaultImg = DEFAULT_HERO_SLIDES[idx % DEFAULT_HERO_SLIDES.length].image;
@@ -78,9 +100,9 @@ export function normalizeHeroSlides(data: any): HeroSlide[] {
       return {
         image: safeImg,
         badge: cleanBadge,
-        title: s.title ?? (idx === 0 ? 'اكتشف أحدث صيحات الموضة' : ''),
+        title: s.title ?? (idx === 0 ? 'عالم متكامل من الأناقة والتميز' : ''),
         subtitle: s.subtitle ?? '',
-        ctaText: s.ctaText ?? 'تسوق الآن',
+        ctaText: s.ctaText ?? 'استكشف التشكيلة',
         title_ar: s.title_ar,
         title_fr: s.title_fr,
         title_en: s.title_en,
@@ -96,10 +118,11 @@ export function normalizeHeroSlides(data: any): HeroSlide[] {
         contentPosition: s.contentPosition || 'start',
         verticalAlign: s.verticalAlign || 'center',
         textAlign: s.textAlign || 'start',
-        maxWidthPercent: s.maxWidthPercent || 50,
+        maxWidthPercent: s.maxWidthPercent || 55,
+        textSpreadMode: s.textSpreadMode || 'grouped',
         textColorTheme: s.textColorTheme || 'light',
         fontFamily: s.fontFamily || 'sans',
-        titleSize: s.titleSize || 'large',
+        titleSize: s.titleSize || 'xlarge',
         overlayStyle: s.overlayStyle || 'charcoal-gradient',
         ctaLink: s.ctaLink || '#products',
         ctaStyle: s.ctaStyle || 'white-solid',
@@ -112,15 +135,19 @@ export function normalizeHeroSlides(data: any): HeroSlide[] {
   }
 
   if (Array.isArray(data.images) && data.images.length > 0) {
-    return data.images.map((img: string, idx: number) => {
+    const validImages = data.images.filter((img: string) => !isObsoleteDemoImage(img));
+    if (validImages.length === 0) {
+      return DEFAULT_HERO_SLIDES;
+    }
+    return validImages.map((img: string, idx: number) => {
       const defaultSlide = DEFAULT_HERO_SLIDES[idx % DEFAULT_HERO_SLIDES.length];
       const safeImg = (typeof img === 'string' && !img.startsWith('data:')) ? img : defaultSlide.image;
       return {
         image: safeImg,
         badge: '',
-        title: defaultSlide.title || (idx === 0 ? 'اكتشف أحدث صيحات الموضة' : ''),
+        title: defaultSlide.title || (idx === 0 ? 'عالم متكامل من الأناقة والتميز' : ''),
         subtitle: defaultSlide.subtitle || '',
-        ctaText: defaultSlide.ctaText || 'تسوق الآن'
+        ctaText: defaultSlide.ctaText || 'استكشف التشكيلة'
       };
     });
   }
@@ -155,6 +182,15 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
 
   // Firestore sync for slides
   useEffect(() => {
+    try {
+      localStorage.removeItem('rachid_shop_hero_slides');
+      localStorage.removeItem('rachid_shop_hero_slides_v2');
+      localStorage.removeItem('rachid_shop_hero_slides_v3');
+      localStorage.removeItem('rachid_shop_hero_slides_v4');
+      localStorage.removeItem('rachid_shop_hero_images');
+      localStorage.removeItem('rachid_shop_hero_images_v4');
+    } catch {}
+
     const docRef = doc(db, 'settings', 'hero');
     const unsubscribe = onSnapshot(
       docRef,
@@ -251,9 +287,7 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
   };
 
   const rawBadge = currentSlide?.[`badge_${language}` as keyof HeroSlide] as string || currentSlide?.badge?.trim() || '';
-  const cleanRawBadge = (rawBadge === 'تشكيلة الموسم الجديد 2026' || rawBadge === 'Nouvelle Collection 2026' || rawBadge === 'New Season Collection 2026')
-    ? ''
-    : rawBadge;
+  const cleanRawBadge = sanitizeHeroBadge(rawBadge);
   const displayBadge = cleanRawBadge ? translateHeroText(cleanRawBadge, language) : '';
 
   const displayTitle = resolveLocalized(
@@ -278,7 +312,8 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
   const contentPosition = currentSlide?.contentPosition || 'start'; // 'start', 'center', 'end'
   const verticalAlign = currentSlide?.verticalAlign || 'center'; // 'top', 'center', 'bottom'
   const textAlign = currentSlide?.textAlign || 'start'; // 'start', 'center', 'end'
-  const maxWidthPercent = currentSlide?.maxWidthPercent || 50; // 40, 50, 60, 100
+  const maxWidthPercent = currentSlide?.maxWidthPercent || 50; // 35, 50, 65, 80, 100
+  const textSpreadMode = currentSlide?.textSpreadMode || 'grouped'; // 'grouped' | 'extended' | 'split'
   const textColorTheme = currentSlide?.textColorTheme || 'light'; // 'light' or 'dark'
   const fontFamily = currentSlide?.fontFamily || 'sans';
   const titleSize = currentSlide?.titleSize || 'large';
@@ -297,23 +332,26 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
     }
   };
 
-  // Determine flex justification for horizontal positioning
+  // Custom pinpoint positioning (X, Y percentage)
+  const customX = isRTL ? currentSlide?.posX_ar : currentSlide?.posX_en;
+  const customY = isRTL ? currentSlide?.posY_ar : currentSlide?.posY_en;
+  const hasCustomCoordinates = typeof customX === 'number' && typeof customY === 'number';
+
+  // Flex alignment classes (In dir="rtl", justify-start aligns to far-right; in dir="ltr", justify-start aligns to far-left)
   const justifyClass = 
     contentPosition === 'center'
-      ? 'justify-center items-center'
+      ? 'justify-center'
       : contentPosition === 'end'
-      ? isRTL ? 'justify-start items-start' : 'justify-end items-end'
-      : isRTL ? 'justify-end items-end' : 'justify-start items-start';
+      ? 'justify-end'
+      : 'justify-start';
 
-  // Determine flex alignment for vertical positioning
   const verticalClass =
     verticalAlign === 'top'
-      ? 'justify-start pt-8 sm:pt-12'
+      ? 'justify-start pt-6 sm:pt-10'
       : verticalAlign === 'bottom'
-      ? 'justify-end pb-8 sm:pb-12'
+      ? 'justify-end pb-6 sm:pb-8 lg:pb-12'
       : 'justify-center';
 
-  // Determine text alignment
   const textAlignmentClass =
     textAlign === 'center'
       ? 'text-center'
@@ -321,49 +359,42 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
       ? isRTL ? 'text-left' : 'text-right'
       : isRTL ? 'text-right' : 'text-left';
 
-  // Font family class
   const fontClass = 
     fontFamily === 'serif' ? 'font-serif' : fontFamily === 'mono' ? 'font-mono' : 'font-sans';
 
-  // Title size class
   const titleSizeClass =
     titleSize === 'xlarge'
-      ? 'text-3xl sm:text-5xl md:text-6xl font-black'
+      ? 'text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black'
       : titleSize === 'normal'
-      ? 'text-xl sm:text-3xl md:text-4xl font-extrabold'
-      : 'text-2xl sm:text-4xl md:text-5xl font-black';
+      ? 'text-xl sm:text-2xl md:text-3xl font-extrabold'
+      : 'text-2xl sm:text-3xl md:text-4xl font-black';
 
-  // Text colors
   const isDarkText = textColorTheme === 'dark';
   const titleColor = isDarkText ? 'text-stone-900 drop-shadow-xs' : 'text-white drop-shadow-md';
-  const subtitleColor = isDarkText ? 'text-stone-700' : 'text-stone-200/95 drop-shadow-xs';
-
-  // Custom pinpoint positioning (X, Y percentage)
-  const customX = isRTL ? currentSlide?.posX_ar : currentSlide?.posX_en;
-  const customY = isRTL ? currentSlide?.posY_ar : currentSlide?.posY_en;
-  const hasCustomCoordinates = typeof customX === 'number' && typeof customY === 'number';
+  const subtitleColor = isDarkText ? 'text-stone-700' : 'text-stone-200 drop-shadow-xs';
 
   // Button style classes
   const getCtaButtonClass = () => {
     switch (ctaStyle) {
       case 'dark-solid':
-        return 'bg-stone-950 hover:bg-stone-900 text-white shadow-md hover:scale-105';
+        return 'bg-stone-950 hover:bg-stone-900 text-white shadow-xl hover:scale-105';
       case 'outline':
         return isDarkText
           ? 'bg-transparent border-2 border-stone-900 text-stone-900 hover:bg-stone-900 hover:text-white'
           : 'bg-transparent border-2 border-white text-white hover:bg-white hover:text-stone-950';
       case 'accent':
-        return 'bg-[#3B4A3F] hover:bg-[#2d3a31] text-white shadow-lg hover:scale-105';
+        return 'bg-[#C5A265] hover:bg-[#b08e53] text-stone-950 shadow-xl hover:scale-105 font-black';
       case 'white-solid':
       default:
-        return 'bg-white hover:bg-stone-50 text-stone-950 shadow-[0_8px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.45)] hover:scale-105';
+        return 'bg-white hover:bg-stone-100 text-stone-950 shadow-[0_8px_24px_rgba(0,0,0,0.35)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.45)] hover:scale-105';
     }
   };
 
   return (
     <div className="max-w-[1536px] mx-auto px-2 sm:px-4 lg:px-6">
+      {/* البانر الإعلاني المدمج مع النصوص بتصميم مصمم برمجياً بدقة */}
       <section 
-        className="relative w-full h-[320px] sm:h-[400px] md:h-[460px] lg:h-[480px] overflow-hidden rounded-2xl sm:rounded-3xl border border-stone-200/60 shadow-lg bg-stone-950 select-none group/hero"
+        className="relative w-full h-[360px] sm:h-[440px] md:h-[500px] lg:h-[540px] overflow-hidden rounded-2xl sm:rounded-3xl border border-stone-200/80 shadow-lg bg-stone-950 select-none group/hero"
         dir={isRTL ? 'rtl' : 'ltr'}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -371,7 +402,6 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* 1. خلفية الصور الممتدة على مساحة البانر بالكامل */}
         {slides.map((slide, idx) => {
           const isActive = idx === currentIndex;
           const slideOverlay = slide.overlayStyle || overlayStyle;
@@ -391,86 +421,68 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
                 loading={idx === 0 ? 'eager' : 'lazy'}
               />
 
-              {/* التدرج اللوني الذكي القابل للتخصيص لعدم حجب محتوى الصورة */}
+              {/* تدرج اتجاهي متناسق يضمن وضوح النصوص بدون حجب المنتجات */}
               {slideOverlay === 'charcoal-gradient' && (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/30 to-transparent sm:hidden" />
-                  <div className={`absolute inset-0 hidden sm:block ${
-                    contentPosition === 'end'
-                      ? isRTL
-                        ? 'bg-gradient-to-r from-stone-950/90 via-stone-950/60 to-transparent to-75%'
-                        : 'bg-gradient-to-l from-stone-950/90 via-stone-950/60 to-transparent to-75%'
-                      : contentPosition === 'center'
-                      ? 'bg-stone-950/45 backdrop-blur-[1px]'
-                      : isRTL 
-                      ? 'bg-gradient-to-l from-stone-950/90 via-stone-950/60 to-transparent to-75%' 
-                      : 'bg-gradient-to-r from-stone-950/90 via-stone-950/60 to-transparent to-75%'
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/40 to-transparent sm:hidden pointer-events-none" />
+                  <div className={`absolute inset-0 hidden sm:block pointer-events-none ${
+                    isRTL
+                      ? 'bg-gradient-to-tl from-stone-950/95 via-stone-950/50 to-transparent to-70%'
+                      : 'bg-gradient-to-tr from-stone-950/95 via-stone-950/50 to-transparent to-70%'
                   }`} />
                 </>
               )}
 
               {slideOverlay === 'light-gradient' && (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent sm:hidden" />
-                  <div className={`absolute inset-0 hidden sm:block ${
-                    contentPosition === 'end'
-                      ? isRTL
-                        ? 'bg-gradient-to-r from-white/95 via-white/70 to-transparent to-75%'
-                        : 'bg-gradient-to-l from-white/95 via-white/70 to-transparent to-75%'
-                      : contentPosition === 'center'
-                      ? 'bg-white/50 backdrop-blur-[1px]'
-                      : isRTL 
-                      ? 'bg-gradient-to-l from-white/95 via-white/70 to-transparent to-75%' 
-                      : 'bg-gradient-to-r from-white/95 via-white/70 to-transparent to-75%'
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent sm:hidden pointer-events-none" />
+                  <div className={`absolute inset-0 hidden sm:block pointer-events-none ${
+                    isRTL
+                      ? 'bg-gradient-to-l from-white/95 via-white/60 to-transparent to-65%'
+                      : 'bg-gradient-to-r from-white/95 via-white/60 to-transparent to-65%'
                   }`} />
                 </>
               )}
 
               {slideOverlay === 'solid-tint' && (
-                <div className="absolute inset-0 bg-black/35" />
+                <div className="absolute inset-0 bg-black/35 pointer-events-none" />
               )}
             </div>
           );
         })}
 
-        {/* 2. المحتوى التحريري القابل للتموضع وتخصيص العرض والمحاذاة */}
-        <div className={`relative z-20 h-full w-full ${hasCustomCoordinates ? '' : `flex flex-col ${verticalClass}`} p-6 sm:p-10 lg:p-14`}>
+        {/* النصوص والأزرار الترويجية المتموضعة برمجياً فوق الصورة */}
+        <div className={`relative z-20 h-full w-full ${hasCustomCoordinates ? 'overflow-hidden pointer-events-none' : `flex flex-col ${verticalClass} p-6 sm:p-10 lg:p-14`}`}>
           {hasCustomCoordinates ? (
             <div
               style={{
                 position: 'absolute',
-                top: `${customY}%`,
-                ...(isRTL ? { right: `${customX}%` } : { left: `${customX}%` }),
+                top: `${Math.min(85, Math.max(10, customY!))}%`,
+                ...(isRTL 
+                  ? { right: `${Math.min(85, Math.max(5, customX!))}%` } 
+                  : { left: `${Math.min(85, Math.max(5, customX!))}%` }),
                 maxWidth: `${maxWidthPercent}%`,
-                transform: `translate(${isRTL ? (customX! > 50 ? '50%' : '0') : (customX! > 50 ? '-50%' : '0')}, ${customY! > 50 ? '-50%' : '0'})`
+                transform: `translate(${isRTL ? (customX! > 50 ? '30%' : '0') : (customX! > 50 ? '-30%' : '0')}, ${customY! > 50 ? '-50%' : '0'})`
               }}
-              className={`w-auto min-w-[260px] ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in duration-500`}
+              className={`w-auto min-w-[260px] p-4 pointer-events-auto ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in duration-500`}
             >
-              {/* الشارة الترويجية إن وجدت */}
               {displayBadge && (
-                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-xs ${
-                  isDarkText 
-                    ? 'bg-stone-900/10 text-stone-900 border border-stone-900/15'
-                    : 'bg-white/15 backdrop-blur-md text-white border border-white/20'
-                }`}>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
                   <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                   <span>{displayBadge}</span>
                 </div>
               )}
 
-              {/* العنوان الرئيسي للبانر */}
               <h1 className={`${titleSizeClass} ${titleColor} tracking-tight leading-[1.15]`}>
                 {displayTitle}
               </h1>
 
-              {/* النص الوصفي */}
               {displaySubtitle && (
-                <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed line-clamp-2 sm:line-clamp-3`}>
+                <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed line-clamp-3 sm:line-clamp-4`}>
                   {displaySubtitle}
                 </p>
               )}
 
-              {/* زر الشراء ومؤشرات الشرائح السفلية */}
               <div className={`pt-2 flex flex-wrap items-center gap-3 sm:gap-5 ${
                 textAlign === 'center' ? 'justify-center' : textAlign === 'end' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-start' : 'justify-start')
               }`}>
@@ -485,123 +497,174 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
                     <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
                   )}
                 </button>
-
-                {/* مؤشرات الشرائح السفلية الأنيقة */}
-                {slides.length > 1 && (
-                  <div className={`flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md ${
-                    isDarkText ? 'bg-stone-900/10 border border-stone-900/10' : 'bg-black/40 border border-white/10'
-                  }`}>
-                    <div className="flex items-center gap-1.5">
-                      {slides.map((_, idx) => {
-                        const isActive = idx === currentIndex;
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => handleSelectSlide(idx)}
-                            className="py-1 px-0.5 cursor-pointer"
-                            aria-label={`Slide ${idx + 1}`}
-                          >
-                            <div
-                              className={`h-1.5 rounded-full transition-all duration-300 ${
-                                isActive 
-                                  ? isDarkText ? 'w-6 sm:w-8 bg-stone-900' : 'w-6 sm:w-8 bg-white' 
-                                  : isDarkText ? 'w-2 bg-stone-900/30 hover:bg-stone-900/60' : 'w-2 bg-white/40 hover:bg-white/70'
-                              }`}
-                            />
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <span className={`text-[11px] font-bold font-mono ms-1 ${isDarkText ? 'text-stone-800' : 'text-white/80'}`}>
-                      0{currentIndex + 1} / 0{slides.length}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           ) : (
-            <div className={`flex w-full ${justifyClass}`}>
-              <div 
-                style={{ maxWidth: `${maxWidthPercent}%` }}
-                className={`w-full min-w-[280px] ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500`}
-              >
-                
-                {/* الشارة الترويجية إن وجدت */}
-                {displayBadge && (
-                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-xs ${
-                    isDarkText 
-                      ? 'bg-stone-900/10 text-stone-900 border border-stone-900/15'
-                      : 'bg-white/15 backdrop-blur-md text-white border border-white/20'
-                  }`}>
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{displayBadge}</span>
-                  </div>
-                )}
-
-                {/* العنوان الرئيسي للبانر */}
-                <h1 className={`${titleSizeClass} ${titleColor} tracking-tight leading-[1.15]`}>
-                  {displayTitle}
-                </h1>
-
-                {/* النص الوصفي */}
-                {displaySubtitle && (
-                  <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed line-clamp-2 sm:line-clamp-3`}>
-                    {displaySubtitle}
-                  </p>
-                )}
-
-                {/* زر الشراء ومؤشرات الشرائح السفلية */}
-                <div className={`pt-2 flex flex-wrap items-center gap-3 sm:gap-5 ${
-                  textAlign === 'center' ? 'justify-center' : textAlign === 'end' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-start' : 'justify-start')
-                }`}>
-                  <button 
-                    onClick={handleCtaClick}
-                    className={`${getCtaButtonClass()} px-6 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2 cursor-pointer group/btn`}
+            <div className={`flex w-full ${textSpreadMode === 'split' ? '' : justifyClass}`}>
+              {textSpreadMode === 'split' ? (
+                <div className="w-full flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div 
+                    style={{ maxWidth: maxWidthPercent === 100 ? '100%' : `${Math.max(maxWidthPercent, 65)}%` }}
+                    className={`flex-1 min-w-0 ${textAlignmentClass} ${fontClass} space-y-2.5 sm:space-y-3.5`}
                   >
-                    <span>{displayCta}</span>
-                    {isRTL ? (
-                      <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
-                    ) : (
-                      <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                    )}
-                  </button>
-
-                  {/* مؤشرات الشرائح السفلية الأنيقة */}
-                  {slides.length > 1 && (
-                    <div className={`flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md ${
-                      isDarkText ? 'bg-stone-900/10 border border-stone-900/10' : 'bg-black/40 border border-white/10'
-                    }`}>
-                      <div className="flex items-center gap-1.5">
-                        {slides.map((_, idx) => {
-                          const isActive = idx === currentIndex;
-                          return (
-                            <button
-                              key={idx}
-                              onClick={() => handleSelectSlide(idx)}
-                              className="py-1 px-0.5 cursor-pointer"
-                              aria-label={`Slide ${idx + 1}`}
-                            >
-                              <div
-                                className={`h-1.5 rounded-full transition-all duration-300 ${
-                                  isActive 
-                                    ? isDarkText ? 'w-6 sm:w-8 bg-stone-900' : 'w-6 sm:w-8 bg-white' 
-                                    : isDarkText ? 'w-2 bg-stone-900/30 hover:bg-stone-900/60' : 'w-2 bg-white/40 hover:bg-white/70'
-                                }`}
-                              />
-                            </button>
-                          );
-                        })}
+                    {displayBadge && (
+                      <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span>{displayBadge}</span>
                       </div>
-                      <span className={`text-[11px] font-bold font-mono ms-1 ${isDarkText ? 'text-stone-800' : 'text-white/80'}`}>
-                        0{currentIndex + 1} / 0{slides.length}
-                      </span>
+                    )}
+
+                    <h1 className={`${titleSizeClass} ${titleColor} tracking-tight leading-[1.15]`}>
+                      {displayTitle}
+                    </h1>
+
+                    {displaySubtitle && (
+                      <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed max-w-3xl`}>
+                        {displaySubtitle}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="shrink-0 flex items-center gap-3 sm:gap-4 pt-1 md:pt-0">
+                    <button 
+                      onClick={handleCtaClick}
+                      className={`${getCtaButtonClass()} px-7 sm:px-9 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2 cursor-pointer group/btn shadow-xl`}
+                    >
+                      <span>{displayCta}</span>
+                      {isRTL ? (
+                        <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                      )}
+                    </button>
+
+                    {slides.length > 1 && (
+                      <div className="flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md bg-black/40 border border-white/10">
+                        <div className="flex items-center gap-1.5">
+                          {slides.map((_, idx) => {
+                            const isActive = idx === currentIndex;
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => handleSelectSlide(idx)}
+                                className="py-1 px-0.5 cursor-pointer"
+                                aria-label={`Slide ${idx + 1}`}
+                              >
+                                <div
+                                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                                    isActive ? 'w-6 sm:w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'
+                                  }`}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <span className="text-[11px] font-bold font-mono ms-1 text-white/80">
+                          0{currentIndex + 1} / 0{slides.length}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div 
+                  style={{ 
+                    maxWidth: textSpreadMode === 'extended' 
+                      ? (maxWidthPercent === 100 ? '100%' : `${Math.max(maxWidthPercent, 80)}%`) 
+                      : `${maxWidthPercent}%` 
+                  }}
+                  className={`w-full min-w-[280px] ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500`}
+                >
+                  {displayBadge && (
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                      <span>{displayBadge}</span>
                     </div>
                   )}
+
+                  <h1 className={`${titleSizeClass} ${titleColor} tracking-tight leading-[1.15]`}>
+                    {displayTitle}
+                  </h1>
+
+                  {displaySubtitle && (
+                    <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed ${
+                      textSpreadMode === 'extended' ? '' : 'line-clamp-3 sm:line-clamp-4'
+                    }`}>
+                      {displaySubtitle}
+                    </p>
+                  )}
+
+                  <div className={`pt-2 flex flex-wrap items-center gap-3 sm:gap-5 ${
+                    textAlign === 'center' ? 'justify-center' : textAlign === 'end' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-start' : 'justify-start')
+                  }`}>
+                    <button 
+                      onClick={handleCtaClick}
+                      className={`${getCtaButtonClass()} px-6 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2 cursor-pointer group/btn`}
+                    >
+                      <span>{displayCta}</span>
+                      {isRTL ? (
+                        <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
+                      ) : (
+                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                      )}
+                    </button>
+
+                    {slides.length > 1 && (
+                      <div className="flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md bg-black/40 border border-white/10">
+                        <div className="flex items-center gap-1.5">
+                          {slides.map((_, idx) => {
+                            const isActive = idx === currentIndex;
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => handleSelectSlide(idx)}
+                                className="py-1 px-0.5 cursor-pointer"
+                                aria-label={`Slide ${idx + 1}`}
+                              >
+                                <div
+                                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                                    isActive ? 'w-6 sm:w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'
+                                  }`}
+                                />
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <span className="text-[11px] font-bold font-mono ms-1 text-white/80">
+                          0{currentIndex + 1} / 0{slides.length}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
+
+        {/* أزرار تقليب الشرائح الجانبية عند وجود أكثر من شريحة */}
+        {slides.length > 1 && (
+          <>
+            <button
+              onClick={handlePrev}
+              aria-label="Previous slide"
+              className={`absolute top-1/2 -translate-y-1/2 z-30 ${
+                isRTL ? 'right-3 sm:right-5' : 'left-3 sm:left-5'
+              } w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/30 hover:bg-black/60 text-white border border-white/20 shadow-lg flex items-center justify-center opacity-0 group-hover/hero:opacity-100 transition-all duration-200 cursor-pointer backdrop-blur-md`}
+            >
+              {isRTL ? <ChevronRight className="w-6 h-6" /> : <ChevronLeft className="w-6 h-6" />}
+            </button>
+            <button
+              onClick={handleNext}
+              aria-label="Next slide"
+              className={`absolute top-1/2 -translate-y-1/2 z-30 ${
+                isRTL ? 'left-3 sm:left-5' : 'right-3 sm:right-5'
+              } w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/30 hover:bg-black/60 text-white border border-white/20 shadow-lg flex items-center justify-center opacity-0 group-hover/hero:opacity-100 transition-all duration-200 cursor-pointer backdrop-blur-md`}
+            >
+              {isRTL ? <ChevronLeft className="w-6 h-6" /> : <ChevronRight className="w-6 h-6" />}
+            </button>
+          </>
+        )}
       </section>
     </div>
   );

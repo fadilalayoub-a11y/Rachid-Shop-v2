@@ -1,8 +1,10 @@
 export { AdminAuthGate } from './AdminAuthGate';
 export { AdminHeader } from './AdminHeader';
 export { AdminTabsNav, type AdminTabType } from './AdminTabsNav';
-export { InventoryTab } from './InventoryTab';
-export { AddProductTab } from './AddProductTab';
 export { DeleteConfirmModal } from './DeleteConfirmModal';
-export { HeroImagesTab } from './HeroImagesTab';
-export { CategoryImagesTab } from './CategoryImagesTab';
+
+// Dedicated Tab Folders
+export { AddProductTab } from './product/AddProductTab';
+export { HeroImagesTab } from './hero/HeroImagesTab';
+export { CategoryImagesTab } from './category-images/CategoryImagesTab';
+export { InventoryTab } from './inventory/InventoryTab';

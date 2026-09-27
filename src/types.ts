@@ -106,6 +106,7 @@ export interface HeroSlide {
   verticalAlign?: 'top' | 'center' | 'bottom'; // Vertical alignment (fallback)
   textAlign?: 'start' | 'center' | 'end'; // Text alignment
   maxWidthPercent?: number; // Maximum width percentage for text container (e.g. 40, 50, 60, 100)
+  textSpreadMode?: 'grouped' | 'extended' | 'split'; // 'grouped' = مجمعة في كتلة واحدة, 'extended' = ممتدة وفسيحة أفقياً, 'split' = موزعة عبر أطراف البانر
   textColorTheme?: 'light' | 'dark'; // Light text (for dark images) or dark text (for light/white backgrounds)
   fontFamily?: 'sans' | 'serif' | 'mono'; // Font style
   titleSize?: 'normal' | 'large' | 'xlarge'; // Title size
