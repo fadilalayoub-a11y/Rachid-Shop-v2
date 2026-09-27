@@ -102,8 +102,8 @@ export interface HeroSlide {
   ctaText_en?: string;
 
   // Visual layout & typography customization
-  contentPosition?: 'start' | 'center' | 'end'; // Horizontal position (start=left/right based on RTL, center, end)
-  verticalAlign?: 'top' | 'center' | 'bottom'; // Vertical alignment
+  contentPosition?: 'start' | 'center' | 'end'; // Horizontal position (fallback)
+  verticalAlign?: 'top' | 'center' | 'bottom'; // Vertical alignment (fallback)
   textAlign?: 'start' | 'center' | 'end'; // Text alignment
   maxWidthPercent?: number; // Maximum width percentage for text container (e.g. 40, 50, 60, 100)
   textColorTheme?: 'light' | 'dark'; // Light text (for dark images) or dark text (for light/white backgrounds)
@@ -112,4 +112,11 @@ export interface HeroSlide {
   overlayStyle?: 'charcoal-gradient' | 'light-gradient' | 'solid-tint' | 'none'; // Background tint behind text
   ctaLink?: string; // Where the CTA button goes ('#products', 'clothes', 'shoes', 'accessories', etc.)
   ctaStyle?: 'white-solid' | 'dark-solid' | 'outline' | 'accent'; // Style of CTA button
+
+  // Free Visual Pinning (X% and Y% from 0 to 100 on the image)
+  // Specific for Arabic (RTL) and Latin/English/French (LTR)
+  posX_ar?: number; // 0% to 100% (from right or left)
+  posY_ar?: number; // 0% to 100% (from top)
+  posX_en?: number; // 0% to 100%
+  posY_en?: number; // 0% to 100%
 }

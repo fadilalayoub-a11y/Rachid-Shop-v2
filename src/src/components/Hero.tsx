@@ -102,7 +102,11 @@ export function normalizeHeroSlides(data: any): HeroSlide[] {
         titleSize: s.titleSize || 'large',
         overlayStyle: s.overlayStyle || 'charcoal-gradient',
         ctaLink: s.ctaLink || '#products',
-        ctaStyle: s.ctaStyle || 'white-solid'
+        ctaStyle: s.ctaStyle || 'white-solid',
+        posX_ar: typeof s.posX_ar === 'number' ? s.posX_ar : undefined,
+        posY_ar: typeof s.posY_ar === 'number' ? s.posY_ar : undefined,
+        posX_en: typeof s.posX_en === 'number' ? s.posX_en : undefined,
+        posY_en: typeof s.posY_en === 'number' ? s.posY_en : undefined
       };
     });
   }
@@ -334,6 +338,11 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
   const titleColor = isDarkText ? 'text-stone-900 drop-shadow-xs' : 'text-white drop-shadow-md';
   const subtitleColor = isDarkText ? 'text-stone-700' : 'text-stone-200/95 drop-shadow-xs';
 
+  // Custom pinpoint positioning (X, Y percentage)
+  const customX = isRTL ? currentSlide?.posX_ar : currentSlide?.posX_en;
+  const customY = isRTL ? currentSlide?.posY_ar : currentSlide?.posY_en;
+  const hasCustomCoordinates = typeof customX === 'number' && typeof customY === 'number';
+
   // Button style classes
   const getCtaButtonClass = () => {
     switch (ctaStyle) {
@@ -425,13 +434,18 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
         })}
 
         {/* 2. المحتوى التحريري القابل للتموضع وتخصيص العرض والمحاذاة */}
-        <div className={`relative z-20 h-full flex flex-col ${verticalClass} p-6 sm:p-10 lg:p-14`}>
-          <div className={`flex w-full ${justifyClass}`}>
-            <div 
-              style={{ maxWidth: `${maxWidthPercent}%` }}
-              className={`w-full min-w-[280px] ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500`}
+        <div className={`relative z-20 h-full w-full ${hasCustomCoordinates ? '' : `flex flex-col ${verticalClass}`} p-6 sm:p-10 lg:p-14`}>
+          {hasCustomCoordinates ? (
+            <div
+              style={{
+                position: 'absolute',
+                top: `${customY}%`,
+                ...(isRTL ? { right: `${customX}%` } : { left: `${customX}%` }),
+                maxWidth: `${maxWidthPercent}%`,
+                transform: `translate(${isRTL ? (customX! > 50 ? '50%' : '0') : (customX! > 50 ? '-50%' : '0')}, ${customY! > 50 ? '-50%' : '0'})`
+              }}
+              className={`w-auto min-w-[260px] ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in duration-500`}
             >
-              
               {/* الشارة الترويجية إن وجدت */}
               {displayBadge && (
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-xs ${
@@ -505,7 +519,88 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
                 )}
               </div>
             </div>
-          </div>
+          ) : (
+            <div className={`flex w-full ${justifyClass}`}>
+              <div 
+                style={{ maxWidth: `${maxWidthPercent}%` }}
+                className={`w-full min-w-[280px] ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500`}
+              >
+                
+                {/* الشارة الترويجية إن وجدت */}
+                {displayBadge && (
+                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs sm:text-sm font-semibold shadow-xs ${
+                    isDarkText 
+                      ? 'bg-stone-900/10 text-stone-900 border border-stone-900/15'
+                      : 'bg-white/15 backdrop-blur-md text-white border border-white/20'
+                  }`}>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{displayBadge}</span>
+                  </div>
+                )}
+
+                {/* العنوان الرئيسي للبانر */}
+                <h1 className={`${titleSizeClass} ${titleColor} tracking-tight leading-[1.15]`}>
+                  {displayTitle}
+                </h1>
+
+                {/* النص الوصفي */}
+                {displaySubtitle && (
+                  <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed line-clamp-2 sm:line-clamp-3`}>
+                    {displaySubtitle}
+                  </p>
+                )}
+
+                {/* زر الشراء ومؤشرات الشرائح السفلية */}
+                <div className={`pt-2 flex flex-wrap items-center gap-3 sm:gap-5 ${
+                  textAlign === 'center' ? 'justify-center' : textAlign === 'end' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-start' : 'justify-start')
+                }`}>
+                  <button 
+                    onClick={handleCtaClick}
+                    className={`${getCtaButtonClass()} px-6 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2 cursor-pointer group/btn`}
+                  >
+                    <span>{displayCta}</span>
+                    {isRTL ? (
+                      <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
+                    ) : (
+                      <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                    )}
+                  </button>
+
+                  {/* مؤشرات الشرائح السفلية الأنيقة */}
+                  {slides.length > 1 && (
+                    <div className={`flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md ${
+                      isDarkText ? 'bg-stone-900/10 border border-stone-900/10' : 'bg-black/40 border border-white/10'
+                    }`}>
+                      <div className="flex items-center gap-1.5">
+                        {slides.map((_, idx) => {
+                          const isActive = idx === currentIndex;
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => handleSelectSlide(idx)}
+                              className="py-1 px-0.5 cursor-pointer"
+                              aria-label={`Slide ${idx + 1}`}
+                            >
+                              <div
+                                className={`h-1.5 rounded-full transition-all duration-300 ${
+                                  isActive 
+                                    ? isDarkText ? 'w-6 sm:w-8 bg-stone-900' : 'w-6 sm:w-8 bg-white' 
+                                    : isDarkText ? 'w-2 bg-stone-900/30 hover:bg-stone-900/60' : 'w-2 bg-white/40 hover:bg-white/70'
+                                }`}
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <span className={`text-[11px] font-bold font-mono ms-1 ${isDarkText ? 'text-stone-800' : 'text-white/80'}`}>
+                        0{currentIndex + 1} / 0{slides.length}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </div>

@@ -26,7 +26,10 @@ import {
   AlignLeft,
   MoveHorizontal,
   MoveVertical,
-  Navigation
+  Navigation,
+  Crosshair,
+  Target,
+  MousePointer
 } from 'lucide-react';
 import { 
   DEFAULT_HERO_SLIDES, 
@@ -606,23 +609,161 @@ export function HeroImagesTab() {
                       </div>
 
                       {/* Advanced Visual Design & Positioning Accordion */}
-                      <div className="mt-4 pt-3 border-t border-gray-100 bg-stone-50/70 p-3.5 rounded-xl border border-stone-200/60 space-y-3">
+                      <div className="mt-4 pt-3 border-t border-gray-100 bg-stone-50/70 p-3.5 rounded-xl border border-stone-200/60 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
+                            <Crosshair className="w-4 h-4 text-emerald-600" />
+                            <span>تحديد موضع الكتابة المباشر على الصورة (حر بالنقرة):</span>
+                          </span>
+                          <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                            ميزة تحديد الموقع بالنقرة 🎯
+                          </span>
+                        </div>
+
+                        {/* Interactive Click-to-Position Canvas / Box */}
+                        <div className="bg-white p-3 rounded-xl border border-stone-200 space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-stone-700">
+                              انقر مباشرة فوق الصورة أدناه لوضع الكتابة بدقة بالبكسل:
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[11px] font-semibold text-stone-500">اللغة الحالية للتثبيت:</span>
+                              <div className="inline-flex rounded-lg border border-stone-200 p-0.5 bg-stone-100 text-[11px]">
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewLang('ar')}
+                                  className={`px-2 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
+                                    previewLang === 'ar' ? 'bg-emerald-600 text-white shadow-xs' : 'text-stone-600'
+                                  }`}
+                                >
+                                  العربية (RTL)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewLang('en')}
+                                  className={`px-2 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
+                                    previewLang === 'en' ? 'bg-emerald-600 text-white shadow-xs' : 'text-stone-600'
+                                  }`}
+                                >
+                                  English (LTR)
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Mini clickable interactive image canvas */}
+                          <div
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+                              const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+                              
+                              if (previewLang === 'ar') {
+                                // For Arabic RTL, distance from right
+                                const posX = Math.round(100 - clickX);
+                                const posY = Math.round(clickY);
+                                handleUpdateSlideField(index, 'posX_ar', posX);
+                                handleUpdateSlideField(index, 'posY_ar', posY);
+                              } else {
+                                // For English LTR, distance from left
+                                const posX = Math.round(clickX);
+                                const posY = Math.round(clickY);
+                                handleUpdateSlideField(index, 'posX_en', posX);
+                                handleUpdateSlideField(index, 'posY_en', posY);
+                              }
+                            }}
+                            className="relative w-full aspect-21/9 sm:aspect-16/7 bg-stone-900 rounded-lg overflow-hidden cursor-crosshair group/picker border border-stone-300 select-none"
+                            title="انقر في أي مكان لوضع النصوص هنا بدقة"
+                          >
+                            <img
+                              src={slide.image}
+                              alt="Slide click map"
+                              className="absolute inset-0 w-full h-full object-cover opacity-80"
+                            />
+                            
+                            {/* Grid overlay for guidance */}
+                            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff15_1px,transparent_1px),linear-gradient(to_bottom,#ffffff15_1px,transparent_1px)] bg-[size:10%_25%]" />
+
+                            {/* Position pin indicator */}
+                            {(() => {
+                              const isAr = previewLang === 'ar';
+                              const pX = isAr ? slide.posX_ar : slide.posX_en;
+                              const pY = isAr ? slide.posY_ar : slide.posY_en;
+                              const hasCoord = typeof pX === 'number' && typeof pY === 'number';
+
+                              if (!hasCoord) {
+                                return (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-xs font-bold gap-1.5 backdrop-blur-[0.5px]">
+                                    <Target className="w-4 h-4 text-emerald-400 animate-pulse" />
+                                    <span>انقر هنا لتحديد موقع النص بحرية تامة على الصورة ({isAr ? 'بالعربية' : 'بالإنجليزية'})</span>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div
+                                  style={{
+                                    top: `${pY}%`,
+                                    ...(isAr ? { right: `${pX}%` } : { left: `${pX}%` }),
+                                    transform: 'translate(-50%, -50%)'
+                                  }}
+                                  className="absolute z-20 pointer-events-none flex flex-col items-center"
+                                >
+                                  <div className="w-7 h-7 rounded-full bg-emerald-500/90 border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-black animate-bounce">
+                                    <Target className="w-4 h-4" />
+                                  </div>
+                                  <span className="bg-stone-950/90 text-white text-[9px] font-mono px-1.5 py-0.5 rounded-sm shadow-md mt-0.5 whitespace-nowrap">
+                                    {isAr ? `يمين: ${pX}% | أعلى: ${pY}%` : `X: ${pX}% | Y: ${pY}%`}
+                                  </span>
+                                </div>
+                              );
+                            })()}
+                          </div>
+
+                          {/* Coordinates summary & reset */}
+                          <div className="flex flex-wrap items-center justify-between pt-1 text-[11px] text-stone-600 gap-2">
+                            <div className="flex items-center gap-3">
+                              <span>
+                                🇸🇦 <strong className="text-stone-900">موضع العربية:</strong>{' '}
+                                {typeof slide.posX_ar === 'number' ? `يمين ${slide.posX_ar}%، أعلى ${slide.posY_ar}%` : 'تلقائي (افتراضي)'}
+                              </span>
+                              <span>
+                                🇬🇧 <strong className="text-stone-900">موضع الإنجليزية:</strong>{' '}
+                                {typeof slide.posX_en === 'number' ? `يسار ${slide.posX_en}%، أعلى ${slide.posY_en}%` : 'تلقائي (افتراضي)'}
+                              </span>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (previewLang === 'ar') {
+                                  handleUpdateSlideField(index, 'posX_ar', undefined);
+                                  handleUpdateSlideField(index, 'posY_ar', undefined);
+                                } else {
+                                  handleUpdateSlideField(index, 'posX_en', undefined);
+                                  handleUpdateSlideField(index, 'posY_en', undefined);
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700 font-semibold underline cursor-pointer"
+                            >
+                              إعادة تعيين للموضع الافتراضي ({previewLang === 'ar' ? 'العربية' : 'الإنجليزية'})
+                            </button>
+                          </div>
+                        </div>
+
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
                             <Sliders className="w-3.5 h-3.5 text-blue-600" />
-                            <span>تحديد موضع الكتابة، التعتيم، نوع الخط، وحجم العرض:</span>
-                          </span>
-                          <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-md">
-                            تحكم متقدم
+                            <span>تخصيص العرض والخط والتعتيم وزر الشراء:</span>
                           </span>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                          {/* Horizontal Position */}
+                          {/* Horizontal Position (Fallback) */}
                           <div>
                             <label className="text-[10px] font-bold text-gray-700 mb-1 flex items-center gap-1">
                               <MoveHorizontal className="w-3 h-3 text-gray-500" />
-                              <span>موضع النصوص أفقياً:</span>
+                              <span>الموضع الافتراضي (إذا لم يتم التحديد بالنقر):</span>
                             </label>
                             <select
                               value={slide.contentPosition || 'start'}
@@ -646,6 +787,7 @@ export function HeroImagesTab() {
                               onChange={(e) => handleUpdateSlideField(index, 'maxWidthPercent', Number(e.target.value))}
                               className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
                             >
+                              <option value={35}>35% (مساحة ضيقة جداً)</option>
                               <option value={40}>40% (مساحة ضيقة - يترك 60% للمنتج)</option>
                               <option value={50}>50% (نصف الشاشة - متوازن جداً)</option>
                               <option value={60}>60% (مساحة واسعة)</option>
@@ -812,24 +954,46 @@ export function HeroImagesTab() {
                 const ctaStyle = activeSlide.ctaStyle || 'white-solid';
                 const isAr = previewLang === 'ar';
 
+                // Check pinpoint coordinates
+                const pX = isAr ? activeSlide.posX_ar : activeSlide.posX_en;
+                const pY = isAr ? activeSlide.posY_ar : activeSlide.posY_en;
+                const hasCoord = typeof pX === 'number' && typeof pY === 'number';
+
                 const hJustify = pos === 'center' ? 'justify-center items-center' : pos === 'end' ? (isAr ? 'justify-start' : 'justify-end') : (isAr ? 'justify-end' : 'justify-start');
                 const vPos = vAlign === 'top' ? 'justify-start pt-4' : vAlign === 'bottom' ? 'justify-end pb-4' : 'justify-center';
 
                 return (
                   <div 
-                    className="rounded-2xl overflow-hidden border border-gray-200 shadow-md relative bg-stone-100 aspect-16/10 flex flex-col justify-between p-4"
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const clickX = ((e.clientX - rect.left) / rect.width) * 100;
+                      const clickY = ((e.clientY - rect.top) / rect.height) * 100;
+                      if (isAr) {
+                        const posX = Math.round(100 - clickX);
+                        const posY = Math.round(clickY);
+                        handleUpdateSlideField(previewIndex, 'posX_ar', posX);
+                        handleUpdateSlideField(previewIndex, 'posY_ar', posY);
+                      } else {
+                        const posX = Math.round(clickX);
+                        const posY = Math.round(clickY);
+                        handleUpdateSlideField(previewIndex, 'posX_en', posX);
+                        handleUpdateSlideField(previewIndex, 'posY_en', posY);
+                      }
+                    }}
+                    className="rounded-2xl overflow-hidden border border-gray-200 shadow-md relative bg-stone-100 aspect-16/10 flex flex-col justify-between p-4 cursor-crosshair group/livepreview select-none"
+                    title="انقر في أي مكان لتغيير موضع الكتابة فوراً"
                     dir={isAr ? 'rtl' : 'ltr'}
                   >
                     <img
                       key={previewIndex}
                       src={activeSlide.image}
                       alt="Preview"
-                      className="absolute inset-0 w-full h-full object-cover object-center"
+                      className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
                     />
 
                     {/* Gradient Overlay Preview */}
                     {overlay === 'charcoal-gradient' && (
-                      <div className={`absolute inset-0 ${
+                      <div className={`absolute inset-0 pointer-events-none ${
                         pos === 'end'
                           ? isAr ? 'bg-gradient-to-r from-stone-950/90 via-stone-950/60 to-transparent to-75%' : 'bg-gradient-to-l from-stone-950/90 via-stone-950/60 to-transparent to-75%'
                           : pos === 'center'
@@ -839,7 +1003,7 @@ export function HeroImagesTab() {
                     )}
 
                     {overlay === 'light-gradient' && (
-                      <div className={`absolute inset-0 ${
+                      <div className={`absolute inset-0 pointer-events-none ${
                         pos === 'end'
                           ? isAr ? 'bg-gradient-to-r from-white/95 via-white/70 to-transparent to-75%' : 'bg-gradient-to-l from-white/95 via-white/70 to-transparent to-75%'
                           : pos === 'center'
@@ -849,14 +1013,26 @@ export function HeroImagesTab() {
                     )}
 
                     {overlay === 'solid-tint' && (
-                      <div className="absolute inset-0 bg-black/35" />
+                      <div className="absolute inset-0 bg-black/35 pointer-events-none" />
                     )}
 
-                    <div className={`relative z-10 h-full flex flex-col ${vPos} w-full`}>
-                      <div className={`flex w-full ${hJustify}`}>
-                        <div 
-                          style={{ maxWidth: `${maxW}%` }}
-                          className={`w-full min-w-[180px] ${fontF} space-y-1.5 ${
+                    {/* Badge indicating clickability */}
+                    <div className="absolute top-2 left-2 z-30 opacity-0 group-hover/livepreview:opacity-100 transition-opacity bg-stone-950/80 backdrop-blur-xs text-white text-[10px] px-2 py-0.5 rounded-md pointer-events-none flex items-center gap-1">
+                      <Target className="w-3 h-3 text-emerald-400" />
+                      <span>انقر في أي مكان لتثبيت موضع النص ({isAr ? 'العربية' : 'English'})</span>
+                    </div>
+
+                    <div className={`relative z-10 h-full ${hasCoord ? '' : `flex flex-col ${vPos}`} w-full pointer-events-none`}>
+                      {hasCoord ? (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: `${pY}%`,
+                            ...(isAr ? { right: `${pX}%` } : { left: `${pX}%` }),
+                            maxWidth: `${maxW}%`,
+                            transform: `translate(${isAr ? (pX! > 50 ? '50%' : '0') : (pX! > 50 ? '-50%' : '0')}, ${pY! > 50 ? '-50%' : '0'})`
+                          }}
+                          className={`w-auto min-w-[160px] ${fontF} space-y-1.5 ${
                             tAlign === 'center' ? 'text-center' : isAr ? 'text-right' : 'text-left'
                           }`}
                         >
@@ -898,7 +1074,54 @@ export function HeroImagesTab() {
                             </span>
                           </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className={`flex w-full ${hJustify}`}>
+                          <div 
+                            style={{ maxWidth: `${maxW}%` }}
+                            className={`w-full min-w-[180px] ${fontF} space-y-1.5 ${
+                              tAlign === 'center' ? 'text-center' : isAr ? 'text-right' : 'text-left'
+                            }`}
+                          >
+                            {/* Badge */}
+                            {activeSlide.badge?.trim() && (
+                              <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                isDark ? 'bg-stone-900/10 text-stone-900' : 'bg-white/20 text-white backdrop-blur-xs'
+                              }`}>
+                                {translateHeroText(activeSlide.badge.trim(), previewLang)}
+                              </span>
+                            )}
+
+                            {/* Editable Main Title Preview */}
+                            <h4 className={`text-sm sm:text-base font-black leading-tight ${
+                              isDark ? 'text-stone-950' : 'text-white'
+                            }`}>
+                              {translateHeroText(activeSlide.title?.trim() || 'اكتشف أحدث صيحات الموضة', previewLang)}
+                            </h4>
+
+                            {/* Subtitle Preview */}
+                            <p className={`text-[10px] font-medium line-clamp-2 leading-relaxed ${
+                              isDark ? 'text-stone-700' : 'text-stone-200/90'
+                            }`}>
+                              {translateHeroText(activeSlide.subtitle?.trim() || 'تشكيلة رائعة تناسب ذوقك.', previewLang)}
+                            </p>
+
+                            <div className="pt-0.5">
+                              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-3 py-1 rounded-full shadow-xs ${
+                                ctaStyle === 'dark-solid'
+                                  ? 'bg-stone-950 text-white'
+                                  : ctaStyle === 'outline'
+                                  ? isDark ? 'border border-stone-950 text-stone-950' : 'border border-white text-white'
+                                  : ctaStyle === 'accent'
+                                  ? 'bg-[#3B4A3F] text-white'
+                                  : 'bg-white text-stone-950'
+                              }`}>
+                                <span>{translateHeroText(activeSlide.ctaText?.trim() || 'تسوق الآن', previewLang)}</span>
+                                <span>{previewLang === 'ar' ? '←' : '→'}</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="relative z-10 flex items-center justify-center gap-1 pt-1">
