@@ -18,7 +18,15 @@ import {
   Tag,
   AlignRight,
   MousePointerClick,
-  Languages
+  Languages,
+  Sliders,
+  Palette,
+  Maximize2,
+  AlignCenter,
+  AlignLeft,
+  MoveHorizontal,
+  MoveVertical,
+  Navigation
 } from 'lucide-react';
 import { 
   DEFAULT_HERO_SLIDES, 
@@ -182,7 +190,7 @@ export function HeroImagesTab() {
     setPreviewIndex(slides.length);
   };
 
-  const handleUpdateSlideField = (index: number, field: keyof HeroSlide, value: string) => {
+  const handleUpdateSlideField = (index: number, field: keyof HeroSlide, value: any) => {
     setSlides((prev) => {
       const copy = [...prev];
       copy[index] = {
@@ -573,6 +581,166 @@ export function HeroImagesTab() {
                             className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden text-gray-800 bg-white"
                           />
                         </div>
+
+                        {/* CTA Link Destination */}
+                        <div>
+                          <label className="text-[11px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                            <Navigation className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>وجهة الزر (أين يوجه الزائر عند النقر؟):</span>
+                          </label>
+                          <select
+                            value={slide.ctaLink || '#products'}
+                            onChange={(e) => handleUpdateSlideField(index, 'ctaLink', e.target.value)}
+                            className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden text-gray-800 bg-white cursor-pointer"
+                          >
+                            <option value="#products">قسم المنتجات في الصفحة الرئيسية</option>
+                            <option value="clothes">قسم الملابس (Clothes)</option>
+                            <option value="shoes">قسم الأحذية (Shoes)</option>
+                            <option value="accessories">قسم الإكسسوارات (Accessories)</option>
+                            <option value="collection:denim-casual">تشكيلة: جينز وكاجوال</option>
+                            <option value="collection:sportswear-gym">تشكيلة: ملابس رياضية</option>
+                            <option value="collection:summer-essentials">تشكيلة: أساسيات الصيف</option>
+                            <option value="collection:watches-fragrances">تشكيلة: ساعات وعطور</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Advanced Visual Design & Positioning Accordion */}
+                      <div className="mt-4 pt-3 border-t border-gray-100 bg-stone-50/70 p-3.5 rounded-xl border border-stone-200/60 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
+                            <Sliders className="w-3.5 h-3.5 text-blue-600" />
+                            <span>تحديد موضع الكتابة، التعتيم، نوع الخط، وحجم العرض:</span>
+                          </span>
+                          <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-md">
+                            تحكم متقدم
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                          {/* Horizontal Position */}
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                              <MoveHorizontal className="w-3 h-3 text-gray-500" />
+                              <span>موضع النصوص أفقياً:</span>
+                            </label>
+                            <select
+                              value={slide.contentPosition || 'start'}
+                              onChange={(e) => handleUpdateSlideField(index, 'contentPosition', e.target.value)}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                            >
+                              <option value="start">الجانب الافتراضي (يمين بالعربي / يسار بالإنجليزي)</option>
+                              <option value="center">في المنتصف تماماً</option>
+                              <option value="end">الجانب المعاكس (يسار بالعربي / يمين بالإنجليزي)</option>
+                            </select>
+                          </div>
+
+                          {/* Max Width */}
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                              <Maximize2 className="w-3 h-3 text-gray-500" />
+                              <span>أقصى عرض للكتابة (حتى لا تغطي المنتج):</span>
+                            </label>
+                            <select
+                              value={slide.maxWidthPercent || 50}
+                              onChange={(e) => handleUpdateSlideField(index, 'maxWidthPercent', Number(e.target.value))}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                            >
+                              <option value={40}>40% (مساحة ضيقة - يترك 60% للمنتج)</option>
+                              <option value={50}>50% (نصف الشاشة - متوازن جداً)</option>
+                              <option value={60}>60% (مساحة واسعة)</option>
+                              <option value={100}>100% (كامل العرض)</option>
+                            </select>
+                          </div>
+
+                          {/* Vertical Align */}
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                              <MoveVertical className="w-3 h-3 text-gray-500" />
+                              <span>المحاذاة العمودية:</span>
+                            </label>
+                            <select
+                              value={slide.verticalAlign || 'center'}
+                              onChange={(e) => handleUpdateSlideField(index, 'verticalAlign', e.target.value)}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                            >
+                              <option value="center">في وسط الارتفاع</option>
+                              <option value="top">في الجزء العلوي</option>
+                              <option value="bottom">في الجزء السفلي</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-1">
+                          {/* Color theme */}
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                              <Palette className="w-3 h-3 text-gray-500" />
+                              <span>لون خط النصوص:</span>
+                            </label>
+                            <select
+                              value={slide.textColorTheme || 'light'}
+                              onChange={(e) => handleUpdateSlideField(index, 'textColorTheme', e.target.value)}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                            >
+                              <option value="light">أبيض (للصور الداكنة أو المظللة)</option>
+                              <option value="dark">داكن (للصور الفاتحة أو البيضاء)</option>
+                            </select>
+                          </div>
+
+                          {/* Font Family */}
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                              <Type className="w-3 h-3 text-gray-500" />
+                              <span>نمط الخط:</span>
+                            </label>
+                            <select
+                              value={slide.fontFamily || 'sans'}
+                              onChange={(e) => handleUpdateSlideField(index, 'fontFamily', e.target.value)}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                            >
+                              <option value="sans">Sans (عصري قياسي وواضح)</option>
+                              <option value="serif">Serif (كلاسيكي فاخر ورسمي)</option>
+                              <option value="mono">Mono (تقني مميز)</option>
+                            </select>
+                          </div>
+
+                          {/* Overlay Style */}
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-gray-500" />
+                              <span>تدرج حماية القراءة:</span>
+                            </label>
+                            <select
+                              value={slide.overlayStyle || 'charcoal-gradient'}
+                              onChange={(e) => handleUpdateSlideField(index, 'overlayStyle', e.target.value)}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                            >
+                              <option value="charcoal-gradient">تدرج فحمي ناعم (Dark)</option>
+                              <option value="light-gradient">تدرج أبيض ناعم (Light)</option>
+                              <option value="solid-tint">تعتيم خفيف كامل</option>
+                              <option value="none">بدون تدرج (تظهر الصورة طبيعية)</option>
+                            </select>
+                          </div>
+
+                          {/* Button Style */}
+                          <div>
+                            <label className="text-[10px] font-bold text-gray-700 mb-1 flex items-center gap-1">
+                              <MousePointerClick className="w-3 h-3 text-gray-500" />
+                              <span>تصميم زر الشراء:</span>
+                            </label>
+                            <select
+                              value={slide.ctaStyle || 'white-solid'}
+                              onChange={(e) => handleUpdateSlideField(index, 'ctaStyle', e.target.value)}
+                              className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                            >
+                              <option value="white-solid">زر أبيض وظل ناعم</option>
+                              <option value="dark-solid">زر أسود فاحم</option>
+                              <option value="outline">زر شفاف بإطار أنيق</option>
+                              <option value="accent">زر بلون المتجر الزيتي</option>
+                            </select>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -633,63 +801,123 @@ export function HeroImagesTab() {
             </div>
 
             {activeSlide ? (
-              <div 
-                className="rounded-2xl overflow-hidden border border-gray-200 shadow-md relative bg-stone-100 aspect-16/11 flex flex-col justify-between p-5"
-                dir={previewLang === 'ar' ? 'rtl' : 'ltr'}
-              >
-                <img
-                  key={previewIndex}
-                  src={activeSlide.image}
-                  alt="Preview"
-                  className="absolute inset-0 w-full h-full object-cover object-center animate-billboard-zoom will-change-transform"
-                />
-                <div className={`absolute inset-0 ${
-                  previewLang === 'ar' 
-                    ? 'bg-gradient-to-l from-white/95 via-white/85 to-white/30' 
-                    : 'bg-gradient-to-r from-white/95 via-white/85 to-white/30'
-                }`} />
+              (() => {
+                const pos = activeSlide.contentPosition || 'start';
+                const vAlign = activeSlide.verticalAlign || 'center';
+                const tAlign = activeSlide.textAlign || 'start';
+                const maxW = activeSlide.maxWidthPercent || 50;
+                const isDark = activeSlide.textColorTheme === 'dark';
+                const overlay = activeSlide.overlayStyle || 'charcoal-gradient';
+                const fontF = activeSlide.fontFamily === 'serif' ? 'font-serif' : activeSlide.fontFamily === 'mono' ? 'font-mono' : 'font-sans';
+                const ctaStyle = activeSlide.ctaStyle || 'white-solid';
+                const isAr = previewLang === 'ar';
 
-                <div className={`relative z-10 max-w-[85%] space-y-2.5 ${
-                  previewLang === 'ar' ? 'text-right' : 'text-left'
-                }`}>
-                  {/* Badge */}
-                  {activeSlide.badge?.trim() && (
-                    <span className="inline-block text-[10px] font-bold bg-black/10 px-2.5 py-0.5 rounded-full text-gray-900 border border-black/5">
-                      {translateHeroText(activeSlide.badge.trim(), previewLang)}
-                    </span>
-                  )}
+                const hJustify = pos === 'center' ? 'justify-center items-center' : pos === 'end' ? (isAr ? 'justify-start' : 'justify-end') : (isAr ? 'justify-end' : 'justify-start');
+                const vPos = vAlign === 'top' ? 'justify-start pt-4' : vAlign === 'bottom' ? 'justify-end pb-4' : 'justify-center';
 
-                  {/* Editable Main Title Preview */}
-                  <h4 className="text-lg sm:text-xl font-black text-gray-950 leading-tight">
-                    {translateHeroText(activeSlide.title?.trim() || 'اكتشف أحدث صيحات الموضة', previewLang)}
-                  </h4>
-
-                  {/* Subtitle Preview */}
-                  <p className="text-[11px] text-gray-700 font-medium line-clamp-3 leading-relaxed">
-                    {translateHeroText(activeSlide.subtitle?.trim() || 'تشكيلة رائعة من الملابس والأحذية العصرية التي تناسب ذوقك وتمنحك إطلالة فريدة.', previewLang)}
-                  </p>
-
-                  <div className="pt-1">
-                    <span className="inline-flex items-center gap-1 bg-gray-950 text-white text-[11px] font-bold px-3.5 py-1.5 rounded-full shadow-sm">
-                      <span>{translateHeroText(activeSlide.ctaText?.trim() || 'تسوق الآن', previewLang)}</span>
-                      <span>{previewLang === 'ar' ? '←' : '→'}</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="relative z-10 flex items-center justify-center gap-1.5 pt-2">
-                  {slides.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setPreviewIndex(idx)}
-                      className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                        idx === previewIndex ? 'w-8 bg-gray-950 shadow-xs' : 'w-2 bg-gray-400/80 hover:bg-gray-600'
-                      }`}
+                return (
+                  <div 
+                    className="rounded-2xl overflow-hidden border border-gray-200 shadow-md relative bg-stone-100 aspect-16/10 flex flex-col justify-between p-4"
+                    dir={isAr ? 'rtl' : 'ltr'}
+                  >
+                    <img
+                      key={previewIndex}
+                      src={activeSlide.image}
+                      alt="Preview"
+                      className="absolute inset-0 w-full h-full object-cover object-center"
                     />
-                  ))}
-                </div>
-              </div>
+
+                    {/* Gradient Overlay Preview */}
+                    {overlay === 'charcoal-gradient' && (
+                      <div className={`absolute inset-0 ${
+                        pos === 'end'
+                          ? isAr ? 'bg-gradient-to-r from-stone-950/90 via-stone-950/60 to-transparent to-75%' : 'bg-gradient-to-l from-stone-950/90 via-stone-950/60 to-transparent to-75%'
+                          : pos === 'center'
+                          ? 'bg-stone-950/50'
+                          : isAr ? 'bg-gradient-to-l from-stone-950/90 via-stone-950/60 to-transparent to-75%' : 'bg-gradient-to-r from-stone-950/90 via-stone-950/60 to-transparent to-75%'
+                      }`} />
+                    )}
+
+                    {overlay === 'light-gradient' && (
+                      <div className={`absolute inset-0 ${
+                        pos === 'end'
+                          ? isAr ? 'bg-gradient-to-r from-white/95 via-white/70 to-transparent to-75%' : 'bg-gradient-to-l from-white/95 via-white/70 to-transparent to-75%'
+                          : pos === 'center'
+                          ? 'bg-white/50'
+                          : isAr ? 'bg-gradient-to-l from-white/95 via-white/70 to-transparent to-75%' : 'bg-gradient-to-r from-white/95 via-white/70 to-transparent to-75%'
+                      }`} />
+                    )}
+
+                    {overlay === 'solid-tint' && (
+                      <div className="absolute inset-0 bg-black/35" />
+                    )}
+
+                    <div className={`relative z-10 h-full flex flex-col ${vPos} w-full`}>
+                      <div className={`flex w-full ${hJustify}`}>
+                        <div 
+                          style={{ maxWidth: `${maxW}%` }}
+                          className={`w-full min-w-[180px] ${fontF} space-y-1.5 ${
+                            tAlign === 'center' ? 'text-center' : isAr ? 'text-right' : 'text-left'
+                          }`}
+                        >
+                          {/* Badge */}
+                          {activeSlide.badge?.trim() && (
+                            <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                              isDark ? 'bg-stone-900/10 text-stone-900' : 'bg-white/20 text-white backdrop-blur-xs'
+                            }`}>
+                              {translateHeroText(activeSlide.badge.trim(), previewLang)}
+                            </span>
+                          )}
+
+                          {/* Editable Main Title Preview */}
+                          <h4 className={`text-sm sm:text-base font-black leading-tight ${
+                            isDark ? 'text-stone-950' : 'text-white'
+                          }`}>
+                            {translateHeroText(activeSlide.title?.trim() || 'اكتشف أحدث صيحات الموضة', previewLang)}
+                          </h4>
+
+                          {/* Subtitle Preview */}
+                          <p className={`text-[10px] font-medium line-clamp-2 leading-relaxed ${
+                            isDark ? 'text-stone-700' : 'text-stone-200/90'
+                          }`}>
+                            {translateHeroText(activeSlide.subtitle?.trim() || 'تشكيلة رائعة تناسب ذوقك.', previewLang)}
+                          </p>
+
+                          <div className="pt-0.5">
+                            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-3 py-1 rounded-full shadow-xs ${
+                              ctaStyle === 'dark-solid'
+                                ? 'bg-stone-950 text-white'
+                                : ctaStyle === 'outline'
+                                ? isDark ? 'border border-stone-950 text-stone-950' : 'border border-white text-white'
+                                : ctaStyle === 'accent'
+                                ? 'bg-[#3B4A3F] text-white'
+                                : 'bg-white text-stone-950'
+                            }`}>
+                              <span>{translateHeroText(activeSlide.ctaText?.trim() || 'تسوق الآن', previewLang)}</span>
+                              <span>{previewLang === 'ar' ? '←' : '→'}</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative z-10 flex items-center justify-center gap-1 pt-1">
+                      {slides.map((_, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setPreviewIndex(idx)}
+                          className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                            idx === previewIndex 
+                              ? isDark ? 'w-6 bg-stone-900' : 'w-6 bg-white' 
+                              : isDark ? 'w-1.5 bg-stone-900/30' : 'w-1.5 bg-white/40'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()
             ) : (
               <div className="aspect-16/11 bg-gray-100 rounded-2xl flex items-center justify-center text-gray-400 text-xs">
                 لا توجد شرائح للمعاينة

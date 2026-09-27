@@ -100,4 +100,16 @@ export interface HeroSlide {
   ctaText_ar?: string;
   ctaText_fr?: string;
   ctaText_en?: string;
+
+  // Visual layout & typography customization
+  contentPosition?: 'start' | 'center' | 'end'; // Horizontal position (start=left/right based on RTL, center, end)
+  verticalAlign?: 'top' | 'center' | 'bottom'; // Vertical alignment
+  textAlign?: 'start' | 'center' | 'end'; // Text alignment
+  maxWidthPercent?: number; // Maximum width percentage for text container (e.g. 40, 50, 60, 100)
+  textColorTheme?: 'light' | 'dark'; // Light text (for dark images) or dark text (for light/white backgrounds)
+  fontFamily?: 'sans' | 'serif' | 'mono'; // Font style
+  titleSize?: 'normal' | 'large' | 'xlarge'; // Title size
+  overlayStyle?: 'charcoal-gradient' | 'light-gradient' | 'solid-tint' | 'none'; // Background tint behind text
+  ctaLink?: string; // Where the CTA button goes ('#products', 'clothes', 'shoes', 'accessories', etc.)
+  ctaStyle?: 'white-solid' | 'dark-solid' | 'outline' | 'accent'; // Style of CTA button
 }

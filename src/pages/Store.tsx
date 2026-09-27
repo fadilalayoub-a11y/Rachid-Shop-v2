@@ -157,6 +157,21 @@ export function Store({ initialTab }: StoreProps) {
     }
   };
 
+  // الاستماع لأحداث التنقل من أزرار البانر
+  useEffect(() => {
+    const handleNavigateTab = (e: any) => {
+      const target = e.detail;
+      if (['clothes', 'shoes', 'accessories', 'home'].includes(target)) {
+        handleTabChange(target);
+      } else if (target && target.startsWith('collection:')) {
+        const colSlug = target.replace('collection:', '');
+        navigate(`/collection/${colSlug}`);
+      }
+    };
+    window.addEventListener('navigate-tab', handleNavigateTab);
+    return () => window.removeEventListener('navigate-tab', handleNavigateTab);
+  }, []);
+
   // جلب المنتجات من Firestore
   useEffect(() => {
     const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));

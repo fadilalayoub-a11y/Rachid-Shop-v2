@@ -114,37 +114,37 @@ export function TrustGuarantees() {
           </p>
         </div>
 
-        {/* 1. Guarantees Grid (Modern Soft Shadow, 16px Radius, Hover Elevation, Cairo Font) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {/* 1. Guarantees Horizontal Carousel on Mobile & Grid on Desktop */}
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 overflow-x-auto sm:overflow-x-visible pb-3 sm:pb-0 pt-1 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-none snap-x snap-mandatory">
           {guarantees.map((item, index) => {
             const IconComponent = item.icon;
             return (
               <div
                 key={index}
-                className="bg-white rounded-2xl p-6 sm:p-6 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.05),0_2px_6px_-1px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_28px_-4px_rgba(0,0,0,0.1),0_4px_12px_-2px_rgba(0,0,0,0.04)] hover:-translate-y-1.5 transition-all duration-300 ease-out flex flex-col justify-between group cursor-default"
+                className="min-w-[240px] sm:min-w-0 flex-1 snap-center bg-white rounded-2xl p-4 sm:p-5 shadow-[0_2px_12px_-2px_rgba(0,0,0,0.06)] hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-default border border-stone-100 shrink-0 sm:shrink"
               >
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between gap-1 mb-3">
                     <div
-                      className={`w-12 h-12 rounded-xl ${item.bgColor} flex items-center justify-center transition-transform group-hover:scale-110 duration-300 shadow-[0_2px_8px_rgba(0,0,0,0.03)]`}
+                      className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${item.bgColor} flex items-center justify-center transition-transform group-hover:scale-105 duration-300 shrink-0`}
                     >
-                      <IconComponent className={`w-6 h-6 ${item.iconColor}`} />
+                      <IconComponent className={`w-5 h-5 ${item.iconColor}`} />
                     </div>
-                    <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full border ${item.badgeColor}`}>
+                    <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${item.badgeColor} shrink-0`}>
                       {item.badge}
                     </span>
                   </div>
 
-                  <h3 className="text-sm sm:text-base font-extrabold text-stone-900 mb-2 leading-snug group-hover:text-emerald-700 transition-colors">
+                  <h3 className="text-sm lg:text-base font-extrabold text-stone-900 mb-1.5 leading-snug group-hover:text-emerald-700 transition-colors">
                     {item.title}
                   </h3>
-                  <p className="text-xs text-stone-600 leading-relaxed font-normal">
+                  <p className="text-xs text-stone-500 leading-relaxed font-normal">
                     {item.desc}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-stone-100 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
+                <div className="mt-4 pt-2.5 border-t border-stone-100 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   <span>{isAr ? 'مضمون 100%' : isFr ? 'Garanti à 100%' : '100% Guaranteed'}</span>
                 </div>
               </div>
