@@ -50,29 +50,54 @@ export async function generateSitemapXml(baseUrl: string): Promise<string> {
     { path: '/accessories', priority: '0.8', changefreq: 'weekly' },
   ];
 
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+  const langs = ['ar', 'en', 'fr'];
 
-  // 1. إضافة الصفحات الرئيسية
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`;
+
+  // Helper to generate hreflang links
+  const getHreflangTags = (basePath: string) => {
+    let tags = '';
+    tags += `    <xhtml:link rel="alternate" hreflang="ar" href="${baseUrl}${basePath}" />\n`;
+    tags += `    <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/en${basePath === '/' ? '' : basePath}" />\n`;
+    tags += `    <xhtml:link rel="alternate" hreflang="fr" href="${baseUrl}/fr${basePath === '/' ? '' : basePath}" />\n`;
+    tags += `    <xhtml:link rel="alternate" hreflang="x-default" href="${baseUrl}${basePath}" />\n`;
+    return tags;
+  };
+
+  // 1. إضافة الصفحات الرئيسية بجميع اللغات
   for (const route of staticRoutes) {
-    xml += `  <url>\n`;
-    xml += `    <loc>${baseUrl}${route.path}</loc>\n`;
-    xml += `    <lastmod>${today}</lastmod>\n`;
-    xml += `    <changefreq>${route.changefreq}</changefreq>\n`;
-    xml += `    <priority>${route.priority}</priority>\n`;
-    xml += `  </url>\n`;
+    const basePath = route.path || '/';
+    for (const lang of langs) {
+      const pathPrefix = lang === 'ar' ? '' : `/${lang}`;
+      const fullPath = basePath === '/' ? pathPrefix || '/' : `${pathPrefix}${basePath}`;
+      
+      xml += `  <url>\n`;
+      xml += `    <loc>${baseUrl}${fullPath === '//' ? '/' : fullPath}</loc>\n`;
+      xml += `    <lastmod>${today}</lastmod>\n`;
+      xml += `    <changefreq>${route.changefreq}</changefreq>\n`;
+      xml += `    <priority>${route.priority}</priority>\n`;
+      xml += getHreflangTags(basePath === '/' ? '' : basePath);
+      xml += `  </url>\n`;
+    }
   }
 
   // 2. إضافة روابط كل المنتجات الموجودة في قاعدة البيانات تلقائياً
   for (const prod of products) {
-    xml += `  <url>\n`;
-    xml += `    <loc>${baseUrl}/product/${prod.id}</loc>\n`;
-    if (prod.updatedAt) {
-      xml += `    <lastmod>${prod.updatedAt}</lastmod>\n`;
+    const basePath = `/product/${prod.id}`;
+    for (const lang of langs) {
+      const pathPrefix = lang === 'ar' ? '' : `/${lang}`;
+      
+      xml += `  <url>\n`;
+      xml += `    <loc>${baseUrl}${pathPrefix}${basePath}</loc>\n`;
+      if (prod.updatedAt) {
+        xml += `    <lastmod>${prod.updatedAt}</lastmod>\n`;
+      }
+      xml += `    <changefreq>weekly</changefreq>\n`;
+      xml += `    <priority>0.8</priority>\n`;
+      xml += getHreflangTags(basePath);
+      xml += `  </url>\n`;
     }
-    xml += `    <changefreq>weekly</changefreq>\n`;
-    xml += `    <priority>0.8</priority>\n`;
-    xml += `  </url>\n`;
   }
 
   xml += `</urlset>`;
