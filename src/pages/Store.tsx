@@ -19,6 +19,7 @@ import { CheckoutModal } from '../components/CheckoutModal';
 import { TrustGuarantees } from '../components/TrustGuarantees';
 import { Footer } from '../components/Footer';
 import { LIFESTYLE_COLLECTIONS, isProductInCollection } from '../utils/collections';
+import { autoTranslateProductsForLanguage, subscribeToTranslationUpdates } from '../utils/productLocalization';
 
 interface StoreProps {
   initialTab?: 'home' | 'clothes' | 'shoes' | 'accessories';
@@ -190,6 +191,21 @@ export function Store({ initialTab }: StoreProps) {
     return () => unsubscribe();
   }, []);
 
+  // تحديث حالة الواجهة فور وصول ترجمات جديدة للمنتجات
+  const [, setTranslationTick] = useState(0);
+  useEffect(() => {
+    return subscribeToTranslationUpdates(() => {
+      setTranslationTick(t => t + 1);
+    });
+  }, []);
+
+  // ترجمة فورية لأسماء وأوصاف المنتجات بمجرد تحديد أو تغيير لغة الموقع
+  useEffect(() => {
+    if (products.length > 0 && language) {
+      autoTranslateProductsForLanguage(products, language);
+    }
+  }, [language, products]);
+
   // فتح المنتج تلقائياً عند الدخول برابط مباشر ومزامنة البيانات الحية
   useEffect(() => {
     if (productId) {
@@ -359,19 +375,19 @@ export function Store({ initialTab }: StoreProps) {
   const homeFilterTabs = useMemo(() => [
     {
       id: 'all' as const,
-      label: language === 'ar' ? 'الكل - All' : language === 'fr' ? 'Tous - All' : 'All',
+      label: language === 'ar' ? 'الكل' : language === 'fr' ? 'Tous' : 'All',
     },
     {
       id: 'new_arrivals' as const,
-      label: language === 'ar' ? 'وصل حديثاً - New Arrivals' : language === 'fr' ? 'Nouveautés - New Arrivals' : 'New Arrivals',
+      label: language === 'ar' ? 'وصل حديثاً' : language === 'fr' ? 'Nouveautés' : 'New Arrivals',
     },
     {
       id: 'best_sellers' as const,
-      label: language === 'ar' ? 'الأكثر مبيعاً - Best Sellers' : language === 'fr' ? 'Meilleures Ventes' : 'Best Sellers',
+      label: language === 'ar' ? 'الأكثر مبيعاً' : language === 'fr' ? 'Meilleures Ventes' : 'Best Sellers',
     },
     {
       id: 'sale' as const,
-      label: language === 'ar' ? 'العروض الخاصة - Special Offers / Sale' : language === 'fr' ? 'Offres Spéciales - Sale' : 'Special Offers / Sale',
+      label: language === 'ar' ? 'التخفيضات والعروض' : language === 'fr' ? 'Promotions' : 'Special Offers',
     },
   ], [language]);
 
@@ -655,24 +671,26 @@ export function Store({ initialTab }: StoreProps) {
                 onSelectProduct={handleSelectProduct}
                 emptyMessage={homeSectionConfig.emptyMessage}
                 tabs={
-                  <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 py-1">
-                    {homeFilterTabs.map(tab => {
-                      const isActive = homeProductFilter === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          type="button"
-                          onClick={() => setHomeProductFilter(tab.id)}
-                          className={`min-h-[42px] px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 cursor-pointer shadow-xs active:scale-95 ${
-                            isActive
-                              ? 'bg-stone-950 text-white shadow-sm border border-stone-950 ring-2 ring-stone-950/10'
-                              : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-100 border border-stone-200/90'
-                          }`}
-                        >
-                          {tab.label}
-                        </button>
-                      );
-                    })}
+                  <div className="w-full overflow-x-auto no-scrollbar py-1">
+                    <div className="flex items-stretch justify-start sm:justify-center gap-2 sm:gap-3 min-w-full">
+                      {homeFilterTabs.map(tab => {
+                        const isActive = homeProductFilter === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            onClick={() => setHomeProductFilter(tab.id)}
+                            className={`flex-1 sm:flex-initial min-w-fit min-h-[42px] px-3.5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shadow-xs active:scale-95 text-center ${
+                              isActive
+                                ? 'bg-stone-950 text-white shadow-sm border border-stone-950 ring-2 ring-stone-950/10'
+                                : 'bg-white text-stone-700 hover:text-stone-950 hover:bg-stone-100 border border-stone-200/90'
+                            }`}
+                          >
+                            {tab.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 }
               />

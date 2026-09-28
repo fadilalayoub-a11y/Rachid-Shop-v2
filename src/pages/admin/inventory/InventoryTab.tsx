@@ -184,11 +184,38 @@ export function InventoryTab({
                         </div>
                       </td>
 
-                      {/* Category */}
+                      {/* Category & Style */}
                       <td className="p-4">
-                        <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-700 font-bold rounded-lg text-[11px]">
-                          {subObj ? subObj.nameAr : product.category_id || product.category || 'عام'}
-                        </span>
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className="inline-block px-2.5 py-1 bg-gray-100 text-gray-700 font-bold rounded-lg text-[11px]">
+                            {subObj ? subObj.nameAr : product.category_id || product.category || 'عام'}
+                          </span>
+                          {product.style && (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                              product.style === 'old_money' || product.style === 'old-money'
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : product.style === 'classic'
+                                ? 'bg-blue-100 text-blue-900 border border-blue-200'
+                                : product.style === 'streetwear'
+                                ? 'bg-orange-100 text-orange-900 border border-orange-200'
+                                : product.style === 'sportswear'
+                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                                : 'bg-stone-100 text-stone-800 border border-stone-200'
+                            }`}>
+                              <span>
+                                {product.style === 'old_money' || product.style === 'old-money'
+                                  ? '👑 أولد ماني'
+                                  : product.style === 'classic'
+                                  ? '👔 كلاسيكي'
+                                  : product.style === 'streetwear'
+                                  ? '🔥 ستريت وير'
+                                  : product.style === 'sportswear'
+                                  ? '⚡ رياضي'
+                                  : '☕ كاجوال'}
+                              </span>
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Price */}

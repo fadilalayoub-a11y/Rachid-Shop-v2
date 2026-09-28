@@ -333,8 +333,18 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
   };
 
   // Custom pinpoint positioning (X, Y percentage)
-  const customX = isRTL ? currentSlide?.posX_ar : currentSlide?.posX_en;
-  const customY = isRTL ? currentSlide?.posY_ar : currentSlide?.posY_en;
+  const customX = isRTL 
+    ? currentSlide?.posX_ar 
+    : language === 'fr' 
+    ? (currentSlide?.posX_fr ?? currentSlide?.posX_en)
+    : currentSlide?.posX_en;
+    
+  const customY = isRTL 
+    ? currentSlide?.posY_ar 
+    : language === 'fr' 
+    ? (currentSlide?.posY_fr ?? currentSlide?.posY_en)
+    : currentSlide?.posY_en;
+    
   const hasCustomCoordinates = typeof customX === 'number' && typeof customY === 'number';
 
   // Flex alignment classes (In dir="rtl", justify-start aligns to far-right; in dir="ltr", justify-start aligns to far-left)
@@ -359,19 +369,35 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
       ? isRTL ? 'text-left' : 'text-right'
       : isRTL ? 'text-right' : 'text-left';
 
-  const fontClass = 
-    fontFamily === 'serif' ? 'font-serif' : fontFamily === 'mono' ? 'font-mono' : 'font-sans';
+  const fontClass = (() => {
+    switch (fontFamily) {
+      case 'almarai': return 'font-almarai';
+      case 'tajawal': return 'font-tajawal';
+      case 'ibm': return 'font-ibm';
+      case 'amiri': return 'font-amiri';
+      case 'cinzel': return 'font-cinzel';
+      case 'cormorant': return 'font-cormorant';
+      case 'montserrat': return 'font-montserrat';
+      case 'playfair': return 'font-playfair';
+      case 'cairo': return 'font-cairo';
+      case 'serif': return 'font-serif';
+      case 'mono': return 'font-mono';
+      case 'sans':
+      default:
+        return 'font-cairo';
+    }
+  })();
 
   const titleSizeClass =
     titleSize === 'xlarge'
-      ? 'text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black'
+      ? 'text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08]'
       : titleSize === 'normal'
-      ? 'text-xl sm:text-2xl md:text-3xl font-extrabold'
-      : 'text-2xl sm:text-3xl md:text-4xl font-black';
+      ? 'text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-snug'
+      : 'text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.12]';
 
   const isDarkText = textColorTheme === 'dark';
-  const titleColor = isDarkText ? 'text-stone-900 drop-shadow-xs' : 'text-white drop-shadow-md';
-  const subtitleColor = isDarkText ? 'text-stone-700' : 'text-stone-200 drop-shadow-xs';
+  const titleColor = isDarkText ? 'text-stone-950 drop-shadow-xs' : 'text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]';
+  const subtitleColor = isDarkText ? 'text-stone-800' : 'text-stone-100/95 drop-shadow-xs';
 
   // Button style classes
   const getCtaButtonClass = () => {
@@ -381,7 +407,7 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
       case 'outline':
         return isDarkText
           ? 'bg-transparent border-2 border-stone-900 text-stone-900 hover:bg-stone-900 hover:text-white'
-          : 'bg-transparent border-2 border-white text-white hover:bg-white hover:text-stone-950';
+          : 'bg-transparent border-2 border-white text-white hover:bg-white hover:text-stone-950 backdrop-blur-xs';
       case 'accent':
         return 'bg-[#C5A265] hover:bg-[#b08e53] text-stone-950 shadow-xl hover:scale-105 font-black';
       case 'white-solid':
@@ -391,10 +417,10 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
   };
 
   return (
-    <div className="max-w-[1536px] mx-auto px-2 sm:px-4 lg:px-6">
-      {/* البانر الإعلاني المدمج مع النصوص بتصميم مصمم برمجياً بدقة */}
+    <div className="w-full overflow-hidden bg-stone-950">
+      {/* البانر الإعلاني العريض الممتد على كامل عرض الشاشة مع دقة توزيع النصوص */}
       <section 
-        className="relative w-full h-[360px] sm:h-[440px] md:h-[500px] lg:h-[540px] overflow-hidden rounded-2xl sm:rounded-3xl border border-stone-200/80 shadow-lg bg-stone-950 select-none group/hero"
+        className="relative w-full h-[420px] sm:h-[500px] md:h-[580px] lg:h-[640px] xl:h-[700px] overflow-hidden bg-stone-950 select-none group/hero"
         dir={isRTL ? 'rtl' : 'ltr'}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -421,225 +447,228 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
                 loading={idx === 0 ? 'eager' : 'lazy'}
               />
 
-              {/* تدرج اتجاهي متناسق يضمن وضوح النصوص بدون حجب المنتجات */}
+              {/* تدرج اتجاهي سينمائي يضمن وضوح وقراءة النصوص بدون حجب جمالية الصورة */}
               {slideOverlay === 'charcoal-gradient' && (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/40 to-transparent sm:hidden pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-stone-950/95 via-stone-950/45 to-transparent sm:hidden pointer-events-none" />
                   <div className={`absolute inset-0 hidden sm:block pointer-events-none ${
                     isRTL
-                      ? 'bg-gradient-to-tl from-stone-950/95 via-stone-950/50 to-transparent to-70%'
-                      : 'bg-gradient-to-tr from-stone-950/95 via-stone-950/50 to-transparent to-70%'
+                      ? 'bg-gradient-to-l from-stone-950/95 via-stone-950/60 via-45% to-transparent to-75%'
+                      : 'bg-gradient-to-r from-stone-950/95 via-stone-950/60 via-45% to-transparent to-75%'
                   }`} />
+                  <div className="absolute inset-0 bg-radial-[at_bottom_center] from-transparent via-transparent to-black/30 pointer-events-none" />
                 </>
               )}
 
               {slideOverlay === 'light-gradient' && (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent sm:hidden pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/50 to-transparent sm:hidden pointer-events-none" />
                   <div className={`absolute inset-0 hidden sm:block pointer-events-none ${
                     isRTL
-                      ? 'bg-gradient-to-l from-white/95 via-white/60 to-transparent to-65%'
-                      : 'bg-gradient-to-r from-white/95 via-white/60 to-transparent to-65%'
+                      ? 'bg-gradient-to-l from-white/95 via-white/70 via-45% to-transparent to-75%'
+                      : 'bg-gradient-to-r from-white/95 via-white/70 via-45% to-transparent to-75%'
                   }`} />
                 </>
               )}
 
               {slideOverlay === 'solid-tint' && (
-                <div className="absolute inset-0 bg-black/35 pointer-events-none" />
+                <div className="absolute inset-0 bg-black/40 pointer-events-none" />
               )}
             </div>
           );
         })}
 
-        {/* النصوص والأزرار الترويجية المتموضعة برمجياً فوق الصورة */}
-        <div className={`relative z-20 h-full w-full ${hasCustomCoordinates ? 'overflow-hidden pointer-events-none' : `flex flex-col ${verticalClass} p-6 sm:p-10 lg:p-14`}`}>
-          {hasCustomCoordinates ? (
-            <div
-              style={{
-                position: 'absolute',
-                top: `${Math.min(85, Math.max(10, customY!))}%`,
-                ...(isRTL 
-                  ? { right: `${Math.min(85, Math.max(5, customX!))}%` } 
-                  : { left: `${Math.min(85, Math.max(5, customX!))}%` }),
-                maxWidth: `${maxWidthPercent}%`,
-                transform: `translate(${isRTL ? (customX! > 50 ? '30%' : '0') : (customX! > 50 ? '-30%' : '0')}, ${customY! > 50 ? '-50%' : '0'})`
-              }}
-              className={`w-auto min-w-[260px] p-4 pointer-events-auto ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in duration-500`}
-            >
-              {displayBadge && (
-                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{displayBadge}</span>
+        {/* النصوص والأزرار الترويجية المتموضعة في حاوية محاذاة لشبكة الموقع الداخلية */}
+        <div className="relative z-20 h-full w-full max-w-7xl 2xl:max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
+          <div className={`h-full w-full ${hasCustomCoordinates ? 'relative overflow-hidden pointer-events-none' : `flex flex-col ${verticalClass} py-8 sm:py-12 lg:py-16`}`}>
+            {hasCustomCoordinates ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: `${Math.min(85, Math.max(10, customY!))}%`,
+                  ...(isRTL 
+                    ? { right: `${Math.min(85, Math.max(5, customX!))}%` } 
+                    : { left: `${Math.min(85, Math.max(5, customX!))}%` }),
+                  maxWidth: `${maxWidthPercent}%`,
+                  transform: `translate(${isRTL ? (customX! > 50 ? '30%' : '0') : (customX! > 50 ? '-30%' : '0')}, ${customY! > 50 ? '-50%' : '0'})`
+                }}
+                className={`w-auto min-w-[280px] p-4 pointer-events-auto ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in duration-500`}
+              >
+                {displayBadge && (
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{displayBadge}</span>
+                  </div>
+                )}
+
+                <h1 className={`${titleSizeClass} ${titleColor}`}>
+                  {displayTitle}
+                </h1>
+
+                {displaySubtitle && (
+                  <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed line-clamp-3 sm:line-clamp-4`}>
+                    {displaySubtitle}
+                  </p>
+                )}
+
+                <div className={`pt-2 flex flex-wrap items-center gap-3 sm:gap-5 ${
+                  textAlign === 'center' ? 'justify-center' : textAlign === 'end' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-start' : 'justify-start')
+                }`}>
+                  <button 
+                    onClick={handleCtaClick}
+                    className={`${getCtaButtonClass()} px-7 sm:px-9 py-3.5 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2 cursor-pointer group/btn`}
+                  >
+                    <span>{displayCta}</span>
+                    {isRTL ? (
+                      <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
+                    ) : (
+                      <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                    )}
+                  </button>
                 </div>
-              )}
-
-              <h1 className={`${titleSizeClass} ${titleColor} tracking-tight leading-[1.15]`}>
-                {displayTitle}
-              </h1>
-
-              {displaySubtitle && (
-                <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed line-clamp-3 sm:line-clamp-4`}>
-                  {displaySubtitle}
-                </p>
-              )}
-
-              <div className={`pt-2 flex flex-wrap items-center gap-3 sm:gap-5 ${
-                textAlign === 'center' ? 'justify-center' : textAlign === 'end' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-start' : 'justify-start')
-              }`}>
-                <button 
-                  onClick={handleCtaClick}
-                  className={`${getCtaButtonClass()} px-6 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2 cursor-pointer group/btn`}
-                >
-                  <span>{displayCta}</span>
-                  {isRTL ? (
-                    <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
-                  ) : (
-                    <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                  )}
-                </button>
               </div>
-            </div>
-          ) : (
-            <div className={`flex w-full ${textSpreadMode === 'split' ? '' : justifyClass}`}>
-              {textSpreadMode === 'split' ? (
-                <div className="w-full flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            ) : (
+              <div className={`flex w-full ${textSpreadMode === 'split' ? '' : justifyClass}`}>
+                {textSpreadMode === 'split' ? (
+                  <div className="w-full flex flex-col md:flex-row md:items-end justify-between gap-6 sm:gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div 
+                      style={{ maxWidth: maxWidthPercent === 100 ? '100%' : `${Math.max(maxWidthPercent, 65)}%` }}
+                      className={`flex-1 min-w-0 ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4`}
+                    >
+                      {displayBadge && (
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                          <span>{displayBadge}</span>
+                        </div>
+                      )}
+
+                      <h1 className={`${titleSizeClass} ${titleColor}`}>
+                        {displayTitle}
+                      </h1>
+
+                      {displaySubtitle && (
+                        <p className={`text-sm sm:text-base md:text-lg ${subtitleColor} font-normal leading-relaxed max-w-3xl`}>
+                          {displaySubtitle}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="shrink-0 flex flex-wrap items-center gap-3 sm:gap-4 pt-2 md:pt-0">
+                      <button 
+                        onClick={handleCtaClick}
+                        className={`${getCtaButtonClass()} px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2.5 cursor-pointer group/btn shadow-xl`}
+                      >
+                        <span>{displayCta}</span>
+                        {isRTL ? (
+                          <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
+                        ) : (
+                          <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                        )}
+                      </button>
+
+                      {slides.length > 1 && (
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-full backdrop-blur-md bg-black/40 border border-white/15 shadow-md">
+                          <div className="flex items-center gap-1.5">
+                            {slides.map((_, idx) => {
+                              const isActive = idx === currentIndex;
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => handleSelectSlide(idx)}
+                                  className="py-1 px-0.5 cursor-pointer"
+                                  aria-label={`Slide ${idx + 1}`}
+                                >
+                                  <div
+                                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                                      isActive ? 'w-6 sm:w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'
+                                    }`}
+                                  />
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <span className="text-xs font-bold font-mono ms-1 text-white/90">
+                            0{currentIndex + 1} / 0{slides.length}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
                   <div 
-                    style={{ maxWidth: maxWidthPercent === 100 ? '100%' : `${Math.max(maxWidthPercent, 65)}%` }}
-                    className={`flex-1 min-w-0 ${textAlignmentClass} ${fontClass} space-y-2.5 sm:space-y-3.5`}
+                    style={{ 
+                      maxWidth: textSpreadMode === 'extended' 
+                        ? (maxWidthPercent === 100 ? '100%' : `${Math.max(maxWidthPercent, 80)}%`) 
+                        : `${maxWidthPercent}%` 
+                    }}
+                    className={`w-full min-w-[280px] ${textAlignmentClass} ${fontClass} space-y-3.5 sm:space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500`}
                   >
                     {displayBadge && (
-                      <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
+                      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
                         <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                         <span>{displayBadge}</span>
                       </div>
                     )}
 
-                    <h1 className={`${titleSizeClass} ${titleColor} tracking-tight leading-[1.15]`}>
+                    <h1 className={`${titleSizeClass} ${titleColor}`}>
                       {displayTitle}
                     </h1>
 
                     {displaySubtitle && (
-                      <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed max-w-3xl`}>
+                      <p className={`text-sm sm:text-base md:text-lg ${subtitleColor} font-normal leading-relaxed ${
+                        textSpreadMode === 'extended' ? 'max-w-4xl' : 'line-clamp-3 sm:line-clamp-4'
+                      }`}>
                         {displaySubtitle}
                       </p>
                     )}
-                  </div>
 
-                  <div className="shrink-0 flex items-center gap-3 sm:gap-4 pt-1 md:pt-0">
-                    <button 
-                      onClick={handleCtaClick}
-                      className={`${getCtaButtonClass()} px-7 sm:px-9 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2 cursor-pointer group/btn shadow-xl`}
-                    >
-                      <span>{displayCta}</span>
-                      {isRTL ? (
-                        <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
-                      ) : (
-                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                      )}
-                    </button>
-
-                    {slides.length > 1 && (
-                      <div className="flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md bg-black/40 border border-white/10">
-                        <div className="flex items-center gap-1.5">
-                          {slides.map((_, idx) => {
-                            const isActive = idx === currentIndex;
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() => handleSelectSlide(idx)}
-                                className="py-1 px-0.5 cursor-pointer"
-                                aria-label={`Slide ${idx + 1}`}
-                              >
-                                <div
-                                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                                    isActive ? 'w-6 sm:w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'
-                                  }`}
-                                />
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <span className="text-[11px] font-bold font-mono ms-1 text-white/80">
-                          0{currentIndex + 1} / 0{slides.length}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div 
-                  style={{ 
-                    maxWidth: textSpreadMode === 'extended' 
-                      ? (maxWidthPercent === 100 ? '100%' : `${Math.max(maxWidthPercent, 80)}%`) 
-                      : `${maxWidthPercent}%` 
-                  }}
-                  className={`w-full min-w-[280px] ${textAlignmentClass} ${fontClass} space-y-3 sm:space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500`}
-                >
-                  {displayBadge && (
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs sm:text-sm font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-xs backdrop-blur-md">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{displayBadge}</span>
-                    </div>
-                  )}
-
-                  <h1 className={`${titleSizeClass} ${titleColor} tracking-tight leading-[1.15]`}>
-                    {displayTitle}
-                  </h1>
-
-                  {displaySubtitle && (
-                    <p className={`text-xs sm:text-sm md:text-base ${subtitleColor} font-normal leading-relaxed ${
-                      textSpreadMode === 'extended' ? '' : 'line-clamp-3 sm:line-clamp-4'
+                    <div className={`pt-2 flex flex-wrap items-center gap-3 sm:gap-5 ${
+                      textAlign === 'center' ? 'justify-center' : textAlign === 'end' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-start' : 'justify-start')
                     }`}>
-                      {displaySubtitle}
-                    </p>
-                  )}
+                      <button 
+                        onClick={handleCtaClick}
+                        className={`${getCtaButtonClass()} px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2.5 cursor-pointer group/btn`}
+                      >
+                        <span>{displayCta}</span>
+                        {isRTL ? (
+                          <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
+                        ) : (
+                          <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                        )}
+                      </button>
 
-                  <div className={`pt-2 flex flex-wrap items-center gap-3 sm:gap-5 ${
-                    textAlign === 'center' ? 'justify-center' : textAlign === 'end' ? (isRTL ? 'justify-start' : 'justify-end') : (isRTL ? 'justify-start' : 'justify-start')
-                  }`}>
-                    <button 
-                      onClick={handleCtaClick}
-                      className={`${getCtaButtonClass()} px-6 sm:px-8 py-3 rounded-full font-bold text-xs sm:text-sm tracking-wide transition-all duration-300 active:scale-95 flex items-center gap-2 cursor-pointer group/btn`}
-                    >
-                      <span>{displayCta}</span>
-                      {isRTL ? (
-                        <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover/btn:-translate-x-1" />
-                      ) : (
-                        <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
-                      )}
-                    </button>
-
-                    {slides.length > 1 && (
-                      <div className="flex items-center gap-2 px-3.5 py-2 rounded-full backdrop-blur-md bg-black/40 border border-white/10">
-                        <div className="flex items-center gap-1.5">
-                          {slides.map((_, idx) => {
-                            const isActive = idx === currentIndex;
-                            return (
-                              <button
-                                key={idx}
-                                onClick={() => handleSelectSlide(idx)}
-                                className="py-1 px-0.5 cursor-pointer"
-                                aria-label={`Slide ${idx + 1}`}
-                              >
-                                <div
-                                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                                    isActive ? 'w-6 sm:w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'
-                                  }`}
-                                />
-                              </button>
-                            );
-                          })}
+                      {slides.length > 1 && (
+                        <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-full backdrop-blur-md bg-black/40 border border-white/15 shadow-md">
+                          <div className="flex items-center gap-1.5">
+                            {slides.map((_, idx) => {
+                              const isActive = idx === currentIndex;
+                              return (
+                                <button
+                                  key={idx}
+                                  onClick={() => handleSelectSlide(idx)}
+                                  className="py-1 px-0.5 cursor-pointer"
+                                  aria-label={`Slide ${idx + 1}`}
+                                >
+                                  <div
+                                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                                      isActive ? 'w-6 sm:w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/70'
+                                    }`}
+                                  />
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <span className="text-xs font-bold font-mono ms-1 text-white/90">
+                            0{currentIndex + 1} / 0{slides.length}
+                          </span>
                         </div>
-                        <span className="text-[11px] font-bold font-mono ms-1 text-white/80">
-                          0{currentIndex + 1} / 0{slides.length}
-                        </span>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* أزرار تقليب الشرائح الجانبية عند وجود أكثر من شريحة */}

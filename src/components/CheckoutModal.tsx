@@ -3,6 +3,7 @@ import { CartItem } from '../types';
 import { X, CheckCircle2, ShoppingBag, Phone, MapPin, User, AlertCircle } from 'lucide-react';
 import { normalizeProductImageUrl } from '../utils/image';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedProductName } from '../utils/productLocalization';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ const isValidPhone = (phone: string) => {
 };
 
 export function CheckoutModal({ isOpen, onClose, cartItems, onOrderSuccess }: CheckoutModalProps) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerCity, setCustomerCity] = useState('');
@@ -198,10 +199,10 @@ export function CheckoutModal({ isOpen, onClose, cartItems, onOrderSuccess }: Ch
                     <div key={item.cartItemId} className="pt-2 first:pt-0 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-lg bg-white border border-gray-100 shrink-0 flex items-center justify-center p-0.5 overflow-hidden">
-                          <img src={normalizeProductImageUrl(item.image)} alt={item.name} className="w-full h-full object-contain" />
+                          <img src={normalizeProductImageUrl(item.image)} alt={getLocalizedProductName(item, language)} className="w-full h-full object-contain" />
                         </div>
                         <div>
-                          <p className="font-semibold text-gray-800 line-clamp-1">{item.name}</p>
+                          <p className="font-semibold text-gray-800 line-clamp-1">{getLocalizedProductName(item, language)}</p>
                           <p className="text-gray-500">
                             {item.selectedSize ? `${t.sizeLabel} ${item.selectedSize} | ` : ''}{t.quantity}: {item.quantity}
                           </p>

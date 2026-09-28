@@ -1,10 +1,11 @@
 import { useState, useEffect, FormEvent, useRef } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { Product } from '../types';
-import { X, Plus, Trash2, Image as ImageIcon, Loader2, UploadCloud, Star } from 'lucide-react';
+import { Product, ProductStyle } from '../types';
+import { X, Plus, Trash2, Image as ImageIcon, Loader2, UploadCloud, Star, Sparkles, Languages, CheckCircle2, Globe } from 'lucide-react';
 import { normalizeProductImageUrl } from '../utils/image';
 import { STORE_SUBCATEGORIES, getSubcategoriesForCategory } from '../constants/categories';
+import { requestProductAiTranslation } from '../utils/productLocalization';
 
 interface EditProductModalProps {
   product: Product | null;
@@ -15,11 +16,19 @@ interface EditProductModalProps {
 
 export function EditProductModal({ product, isOpen, onClose, onProductUpdated }: EditProductModalProps) {
   const [name, setName] = useState('');
+  const [nameEn, setNameEn] = useState('');
+  const [nameFr, setNameFr] = useState('');
   const [description, setDescription] = useState('');
+  const [descriptionEn, setDescriptionEn] = useState('');
+  const [descriptionFr, setDescriptionFr] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [showTranslations, setShowTranslations] = useState(false);
+  const [transSuccess, setTransSuccess] = useState(false);
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [category, setCategory] = useState<'clothes' | 'shoes' | 'accessories'>('clothes');
   const [subcategory, setSubcategory] = useState('');
+  const [style, setStyle] = useState<ProductStyle>('old_money');
   const [collections, setCollections] = useState<string[]>([]);
   const [inventory, setInventory] = useState<{ size: string; stock: string }[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -32,11 +41,17 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
   useEffect(() => {
     if (product) {
       setName(product.name || '');
+      setNameEn(product.nameEn || '');
+      setNameFr(product.nameFr || '');
       setDescription(product.description || '');
+      setDescriptionEn(product.descriptionEn || '');
+      setDescriptionFr(product.descriptionFr || '');
+      setShowTranslations(Boolean(product.nameEn || product.nameFr));
       setPrice(product.price ? String(product.price) : '');
       setOriginalPrice(product.originalPrice ? String(product.originalPrice) : '');
       setCategory(product.category || 'clothes');
       setSubcategory(product.subcategory || '');
+      setStyle(product.style || 'old_money');
       setCollections(Array.isArray(product.collections) ? product.collections : []);
 
       const imgs: string[] = [];
@@ -70,6 +85,28 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
     const filesArray = Array.from(files).filter(f => f.type.startsWith('image/'));
     if (filesArray.length > 0) {
       setNewImageFiles(prev => [...prev, ...filesArray]);
+    }
+  };
+
+  const handleTranslate = async () => {
+    if (!name.trim() || isTranslating) return;
+    setIsTranslating(true);
+    setTransSuccess(false);
+    try {
+      const res = await requestProductAiTranslation(name, description, 'ar');
+      if (res) {
+        if (res.en?.name) setNameEn(res.en.name);
+        if (res.fr?.name) setNameFr(res.fr.name);
+        if (res.en?.description) setDescriptionEn(res.en.description);
+        if (res.fr?.description) setDescriptionFr(res.fr.description);
+        setShowTranslations(true);
+        setTransSuccess(true);
+        setTimeout(() => setTransSuccess(false), 4500);
+      }
+    } catch (err: any) {
+      console.error('Translation error in edit modal:', err);
+    } finally {
+      setIsTranslating(false);
     }
   };
 
@@ -141,7 +178,13 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
       await updateDoc(productRef, {
         name: name.trim(),
         title: name.trim(),
+        nameAr: name.trim(),
+        nameEn: nameEn.trim() || null,
+        nameFr: nameFr.trim() || null,
         description: description.trim(),
+        descriptionAr: description.trim(),
+        descriptionEn: descriptionEn.trim() || null,
+        descriptionFr: descriptionFr.trim() || null,
         price: Number(price),
         originalPrice: originalPrice ? Number(originalPrice) : null,
         compare_at_price: originalPrice ? Number(originalPrice) : null,
@@ -149,6 +192,7 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
         category_id: category,
         subcategory: subcategory.trim(),
         subcategory_id: subcategory.trim(),
+        style: style,
         collections,
         inventory: validInventory,
         image: primaryImageUrl,
@@ -202,18 +246,118 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
 
           <form onSubmit={handleUpdate} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">اسم المنتج</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-gray-700">اسم المنتج</label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleTranslate}
+                    disabled={!name.trim() || isTranslating}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 transition-all cursor-pointer shadow-xs active:scale-95"
+                    title="ترجمة فورية بالذكاء الاصطناعي إلى الإنجليزية والفرنسية"
+                  >
+                    {isTranslating ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>جاري الترجمة...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        <span>⚡ ترجمة فورية (EN / FR)</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowTranslations(!showTranslations)}
+                    className="text-xs text-purple-700 hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <Languages className="w-3 h-3" />
+                    <span>{showTranslations ? 'إخفاء اللغات' : 'عرض اللغات'}</span>
+                  </button>
+                </div>
+              </div>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all font-semibold"
               />
             </div>
 
+            {transSuccess && (
+              <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-bold flex items-center gap-2 animate-in fade-in">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>تمت ترجمة الاسم والوصف فورياً إلى الإنجليزية والفرنسية بنجاح!</span>
+              </div>
+            )}
+
+            {showTranslations && (
+              <div className="p-3.5 bg-purple-50/50 border border-purple-100 rounded-xl space-y-3 animate-in fade-in">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      🇬🇧 الاسم بالإنجليزية (English Name)
+                    </label>
+                    <input
+                      type="text"
+                      value={nameEn}
+                      onChange={e => setNameEn(e.target.value)}
+                      placeholder="Product name in English..."
+                      dir="ltr"
+                      className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      🇫🇷 الاسم بالفرنسية (Nom en Français)
+                    </label>
+                    <input
+                      type="text"
+                      value={nameFr}
+                      onChange={e => setNameFr(e.target.value)}
+                      placeholder="Nom du produit en français..."
+                      dir="ltr"
+                      className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      🇬🇧 الوصف بالإنجليزية (English Description)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={descriptionEn}
+                      onChange={e => setDescriptionEn(e.target.value)}
+                      placeholder="English description..."
+                      dir="ltr"
+                      className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                      🇫🇷 الوصف بالفرنسية (Description en Français)
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={descriptionFr}
+                      onChange={e => setDescriptionFr(e.target.value)}
+                      placeholder="Description en français..."
+                      dir="ltr"
+                      className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الوصف (العربية)</label>
               <textarea
                 rows={3}
                 required
@@ -250,7 +394,7 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">القسم الرئيسي</label>
                 <select
@@ -263,7 +407,7 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
                       setSubcategory(subs[0].id);
                     }
                   }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer bg-white text-xs font-bold"
                 >
                   <option value="clothes">ملابس (Clothes)</option>
                   <option value="shoes">أحذية (Shoes)</option>
@@ -276,7 +420,7 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
                 <select
                   value={subcategory}
                   onChange={e => setSubcategory(e.target.value)}
-                  className="w-full px-4 py-2 border border-blue-300 bg-blue-50/30 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer font-bold text-gray-900"
+                  className="w-full px-3 py-2 border border-blue-300 bg-blue-50/30 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer font-bold text-gray-900 text-xs"
                 >
                   <option value="">-- اختر القسم التفصيلي --</option>
                   {getSubcategoriesForCategory(category).map((sub) => (
@@ -284,6 +428,21 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
                       {sub.nameAr}
                     </option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ستايل المظهر (Style)</label>
+                <select
+                  value={style}
+                  onChange={e => setStyle(e.target.value as ProductStyle)}
+                  className="w-full px-3 py-2 border border-purple-300 bg-purple-50/30 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all cursor-pointer font-bold text-gray-900 text-xs"
+                >
+                  <option value="old_money">👑 أولد ماني (Old Money)</option>
+                  <option value="classic">👔 كلاسيكي (Classic)</option>
+                  <option value="streetwear">🔥 ستريت وير (Streetwear)</option>
+                  <option value="sportswear">⚡ رياضي (Sportswear)</option>
+                  <option value="casual">☕ كاجوال (Casual)</option>
                 </select>
               </div>
             </div>

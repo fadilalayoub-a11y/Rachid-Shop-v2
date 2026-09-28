@@ -172,8 +172,8 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
       { id: 'watch', nameAr: 'ساعات راقية', nameEn: 'Luxury Watches' },
     ],
     keywords: [
-      'أولد ماني', 'اولد ماني', 'old money', 'quiet luxury', 'polo', 'بولو',
-      'كتان', 'linen', 'لوفر', 'loafer', 'loafers', 'موكاسان', 'كشمير', 'cashmere'
+      'أولد ماني', 'اولد ماني', 'old money', 'oldmoney', 'quiet luxury', 'polo', 'بولو',
+      'كتان', 'linen', 'لوفر', 'loafer', 'loafers', 'موكاسان', 'كشمير', 'cashmere', 'فخامة هادئة'
     ],
   },
   {
@@ -206,8 +206,9 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
 /**
  * Checks if a product matches a collection by:
  * 1. Explicit collection tag
- * 2. Explicit subcategory / tags
- * 3. Keyword matching in title and description
+ * 2. Explicit style attribute
+ * 3. Explicit subcategory / tags
+ * 4. Keyword matching in title and description
  */
 export function isProductInCollection(product: Product, collectionSlug: string): boolean {
   if (!product) return false;
@@ -215,6 +216,15 @@ export function isProductInCollection(product: Product, collectionSlug: string):
   // 1. Explicit collection assignment
   if (product.collections && product.collections.includes(collectionSlug)) {
     return true;
+  }
+
+  // 2. Explicit style matching
+  if (product.style) {
+    if (collectionSlug === 'old-money' && (product.style === 'old_money' || product.style === 'old-money')) return true;
+    if (collectionSlug === 'classic-style' && product.style === 'classic') return true;
+    if (collectionSlug === 'streetwear' && product.style === 'streetwear') return true;
+    if (collectionSlug === 'sportswear-gym' && product.style === 'sportswear') return true;
+    if (collectionSlug === 'denim-casual' && product.style === 'casual') return true;
   }
 
   const coll = LIFESTYLE_COLLECTIONS.find(c => c.slug === collectionSlug);

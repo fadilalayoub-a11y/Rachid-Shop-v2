@@ -262,11 +262,12 @@ export function ShopByCategories() {
               const customNameObj = customNames[item.id];
               const customAr = customNameObj?.ar?.trim();
               const customEn = customNameObj?.en?.trim();
+              const customFr = customNameObj?.fr?.trim();
 
               const displayName = language === 'ar'
                 ? (customAr || item.nameAr)
                 : language === 'fr'
-                ? (customEn || item.nameFr)
+                ? (customFr || customEn || item.nameFr)
                 : (customEn || item.nameEn);
 
               const displayImage = customImages[item.id] || item.image;

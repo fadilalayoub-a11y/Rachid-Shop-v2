@@ -3,6 +3,7 @@ import { CartItem } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { normalizeProductImageUrl } from '../utils/image';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedProductName } from '../utils/productLocalization';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -15,7 +16,7 @@ interface CartDrawerProps {
 
 export function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantity, onRemoveItem, onCheckout }: CartDrawerProps) {
   const navigate = useNavigate();
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   if (!isOpen) return null;
@@ -73,7 +74,7 @@ export function CartDrawer({ isOpen, onClose, cartItems, onUpdateQuantity, onRem
                   <div className="flex-1 flex flex-col">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-medium text-gray-900 line-clamp-2">{item.name}</h3>
+                        <h3 className="font-medium text-gray-900 line-clamp-2">{getLocalizedProductName(item, language)}</h3>
                         <div className="flex items-center gap-2 mt-1">
                           {item.selectedSize && (
                             <span className="text-xs text-gray-500 font-medium">{t.sizeLabel} {item.selectedSize}</span>

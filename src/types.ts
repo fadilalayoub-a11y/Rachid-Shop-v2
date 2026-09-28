@@ -1,4 +1,6 @@
-export type ProductStyle = 'streetwear' | 'classic' | 'sportswear' | 'casual';
+export type Language = 'en' | 'ar' | 'fr';
+
+export type ProductStyle = 'streetwear' | 'classic' | 'sportswear' | 'casual' | 'old_money' | 'old-money';
 
 export type ProductBadge = 'none' | 'new' | 'sale' | 'best_seller' | 'trendy' | 'free_shipping';
 
@@ -15,7 +17,13 @@ export interface Product {
   id: string;
   name: string;
   title?: string; // Product Title
+  nameAr?: string;
+  nameEn?: string;
+  nameFr?: string;
   description: string;
+  descriptionAr?: string;
+  descriptionEn?: string;
+  descriptionFr?: string;
   price: number;
   originalPrice?: number | null;
   compare_at_price?: number | null;
@@ -108,7 +116,7 @@ export interface HeroSlide {
   maxWidthPercent?: number; // Maximum width percentage for text container (e.g. 40, 50, 60, 100)
   textSpreadMode?: 'grouped' | 'extended' | 'split'; // 'grouped' = مجمعة في كتلة واحدة, 'extended' = ممتدة وفسيحة أفقياً, 'split' = موزعة عبر أطراف البانر
   textColorTheme?: 'light' | 'dark'; // Light text (for dark images) or dark text (for light/white backgrounds)
-  fontFamily?: 'sans' | 'serif' | 'mono'; // Font style
+  fontFamily?: 'cairo' | 'almarai' | 'tajawal' | 'ibm' | 'amiri' | 'cinzel' | 'cormorant' | 'montserrat' | 'playfair' | 'sans' | 'serif' | 'mono'; // Font style
   titleSize?: 'normal' | 'large' | 'xlarge'; // Title size
   overlayStyle?: 'charcoal-gradient' | 'light-gradient' | 'solid-tint' | 'none'; // Background tint behind text
   ctaLink?: string; // Where the CTA button goes ('#products', 'clothes', 'shoes', 'accessories', etc.)
@@ -118,6 +126,8 @@ export interface HeroSlide {
   // Specific for Arabic (RTL) and Latin/English/French (LTR)
   posX_ar?: number; // 0% to 100% (from right or left)
   posY_ar?: number; // 0% to 100% (from top)
+  posX_fr?: number; // 0% to 100%
+  posY_fr?: number; // 0% to 100%
   posX_en?: number; // 0% to 100%
   posY_en?: number; // 0% to 100%
 }

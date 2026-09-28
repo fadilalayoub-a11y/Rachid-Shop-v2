@@ -29,12 +29,16 @@ export interface AddProductTabProps {
 export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabProps) {
   // A. Basic Info & Style
   const [title, setTitle] = useState('');
+  const [titleEn, setTitleEn] = useState('');
+  const [titleFr, setTitleFr] = useState('');
   const [brandId, setBrandId] = useState<string>('rachid-shop');
   const [customBrandName, setCustomBrandName] = useState('');
   const [style, setStyle] = useState<ProductStyle>('streetwear');
   const [categoryId, setCategoryId] = useState<'clothes' | 'shoes' | 'accessories'>('clothes');
   const [subcategoryId, setSubcategoryId] = useState<string>('t-shirts');
   const [description, setDescription] = useState('');
+  const [descriptionEn, setDescriptionEn] = useState('');
+  const [descriptionFr, setDescriptionFr] = useState('');
 
   // B. Pricing & Financials
   const [price, setPrice] = useState('');
@@ -360,7 +364,13 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
       const productPayload = {
         title: title.trim(),
         name: title.trim(),
+        nameAr: title.trim(),
+        nameEn: titleEn.trim() || undefined,
+        nameFr: titleFr.trim() || undefined,
         description: description.trim() || title.trim(),
+        descriptionAr: description.trim() || title.trim(),
+        descriptionEn: descriptionEn.trim() || undefined,
+        descriptionFr: descriptionFr.trim() || undefined,
         price: parseFloat(price),
         compare_at_price: compareAtPrice ? parseFloat(compareAtPrice) : null,
         originalPrice: compareAtPrice ? parseFloat(compareAtPrice) : null,
@@ -404,7 +414,11 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
 
       // Reset Form State
       setTitle('');
+      setTitleEn('');
+      setTitleFr('');
       setDescription('');
+      setDescriptionEn('');
+      setDescriptionFr('');
       setPrice('');
       setCompareAtPrice('');
       setCostPrice('');
@@ -514,6 +528,10 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
         <ProductBasicInfoSection
           title={title}
           setTitle={setTitle}
+          titleEn={titleEn}
+          setTitleEn={setTitleEn}
+          titleFr={titleFr}
+          setTitleFr={setTitleFr}
           brandId={brandId}
           setBrandId={setBrandId}
           customBrandName={customBrandName}
@@ -526,6 +544,10 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
           setSubcategoryId={setSubcategoryId}
           description={description}
           setDescription={setDescription}
+          descriptionEn={descriptionEn}
+          setDescriptionEn={setDescriptionEn}
+          descriptionFr={descriptionFr}
+          setDescriptionFr={setDescriptionFr}
           badge={badge}
           setBadge={setBadge}
           tagsList={tagsList}

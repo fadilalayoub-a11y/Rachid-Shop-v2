@@ -8,6 +8,7 @@ import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import rateLimit from "express-rate-limit";
 import { v2 as cloudinary } from "cloudinary";
+import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 
@@ -255,6 +256,169 @@ app.post(["/api/checkout", "/checkout"], checkoutLimiter, async (req, res) => {
   } catch (err: any) {
     console.error("Checkout transaction error:", err);
     res.status(400).json({ success: false, error: err.message });
+  }
+});
+
+// ==========================================
+// مسار الترجمة الفورية لأسماء وأوصاف المنتجات
+// ==========================================
+app.post(["/api/translate-batch-products", "/translate-batch-products"], async (req, res) => {
+  try {
+    const { items, targetLang = "en" } = req.body;
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ success: false, error: "قائمة المنتجات فارغة" });
+    }
+
+    const cleanItems = items.slice(0, 30).map((it: any) => ({
+      id: String(it.id),
+      name: String(it.name || "").trim(),
+      description: String(it.description || "").trim(),
+    })).filter(it => it.name.length > 0);
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
+    if (apiKey && cleanItems.length > 0) {
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const targetLangName = targetLang === 'fr' ? 'French' : targetLang === 'ar' ? 'Arabic' : 'English';
+        const prompt = `You are a professional luxury fashion e-commerce translator.
+Translate the following list of products into ${targetLangName}.
+Keep shoe, clothing, brand and style terms accurate and elegant (e.g. sneakers, polo, loafers, linen shirt, hoodie, etc.).
+
+Input products list:
+${JSON.stringify(cleanItems, null, 2)}
+
+Output STRICT JSON only without Markdown tags matching this schema:
+{
+  "translations": [
+    { "id": "...", "name": "...", "description": "..." }
+  ]
+}`;
+
+        const aiResponse = await ai.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+          },
+        });
+
+        const rawText = aiResponse.text;
+        if (rawText) {
+          const parsed = JSON.parse(rawText);
+          if (Array.isArray(parsed.translations)) {
+            return res.json({
+              success: true,
+              source: "gemini",
+              translations: parsed.translations,
+            });
+          }
+        }
+      } catch (geminiError) {
+        console.warn("Gemini batch translation error:", geminiError);
+      }
+    }
+
+    // Fallback translations
+    return res.json({
+      success: true,
+      source: "fallback",
+      translations: cleanItems.map(it => ({
+        id: it.id,
+        name: it.name,
+        description: it.description,
+      })),
+    });
+  } catch (error: any) {
+    console.error("Batch translation error:", error);
+    res.status(500).json({ success: false, error: "تعذر ترجمة المنتجات حالياً" });
+  }
+});
+
+app.post(["/api/translate-product", "/translate-product"], async (req, res) => {
+  try {
+    const { name, description = "", sourceLang = "ar" } = req.body;
+
+    if (!name || typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ success: false, error: "اسم المنتج مطلوب للترجمة" });
+    }
+
+    const cleanName = name.trim();
+    const cleanDesc = (description || "").trim();
+
+    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
+    if (apiKey) {
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const prompt = `You are a professional luxury fashion e-commerce translator and copywriter.
+Translate the following product name and product description into Arabic (ar), English (en), and French (fr).
+
+Rules:
+1. Ensure the tone is elegant, modern, and attractive for high-end fashion retail.
+2. Keep shoe, clothing, brand and style terms accurate and natural in each language (e.g. sneakers, polo, loafers, linen shirt, hoodie, etc.).
+3. If the input name or description is already in one of the languages, preserve or refine its quality and translate it faithfully to the other two languages.
+4. Output STRICT JSON only without Markdown tags.
+
+Input:
+Name: "${cleanName}"
+Description: "${cleanDesc || 'ملابس وأحذية عصرية عالية الجودة'}"
+
+JSON Structure:
+{
+  "ar": { "name": "...", "description": "..." },
+  "en": { "name": "...", "description": "..." },
+  "fr": { "name": "...", "description": "..." }
+}`;
+
+        const aiResponse = await ai.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+          },
+        });
+
+        const rawText = aiResponse.text;
+        if (rawText) {
+          const parsed = JSON.parse(rawText);
+          if (parsed.ar && parsed.en && parsed.fr) {
+            return res.json({
+              success: true,
+              source: "gemini",
+              translations: parsed,
+            });
+          }
+        }
+      } catch (geminiError) {
+        console.warn("Gemini translation error, falling back to smart translator:", geminiError);
+      }
+    }
+
+    // خوارزمية ذكية احتياطية (Smart Fashion Fallback) في حال عدم توفر المفتاح
+    const fallbackTranslations = {
+      ar: {
+        name: cleanName,
+        description: cleanDesc || "منتج عالي الجودة بتصميم عصري وأنيق.",
+      },
+      en: {
+        name: cleanName,
+        description: cleanDesc || "High quality product with stylish and modern design.",
+      },
+      fr: {
+        name: cleanName,
+        description: cleanDesc || "Produit de haute qualité au design élégant et moderne.",
+      },
+    };
+
+    return res.json({
+      success: true,
+      source: "fallback",
+      translations: fallbackTranslations,
+    });
+  } catch (error: any) {
+    console.error("Translation route error:", error);
+    res.status(500).json({ success: false, error: "تعذر إتمام الترجمة الفورية حالياً" });
   }
 });
 

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Product } from '../types';
 import { normalizeProductImageUrl } from '../utils/image';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedProductName } from '../utils/productLocalization';
 import { ArrowUpLeft, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface ProductCardProps {
@@ -12,6 +13,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onSelect }: ProductCardProps) {
   const { t, isRTL, language } = useLanguage();
+  const displayName = getLocalizedProductName(product, language);
   const hasDiscount = product.originalPrice && product.originalPrice > product.price;
   const discountPercentage = hasDiscount && product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -64,7 +66,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
         {/* صورة المنتج بحجم كبير يملأ الجزء العلوي بجمالية وبدون ضيق */}
         <img
           src={normalizeProductImageUrl(product.image)}
-          alt={product.name}
+          alt={displayName}
           loading="lazy"
           className={`w-full h-full object-contain p-0.5 block transition-all duration-500 will-change-transform mix-blend-multiply ${
             hoverImage ? 'group-hover:opacity-0 group-hover:scale-105' : 'group-hover:scale-105'
@@ -75,7 +77,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
         {hoverImage && (
           <img
             src={normalizeProductImageUrl(hoverImage)}
-            alt={`${product.name} - preview`}
+            alt={`${displayName} - preview`}
             loading="lazy"
             className={`absolute inset-0 w-full h-full object-contain p-0.5 transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-105 pointer-events-none will-change-transform mix-blend-multiply ${
               isOutOfStock ? 'grayscale contrast-90' : ''
@@ -99,9 +101,9 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
             className={`text-[13px] sm:text-[14px] font-bold text-stone-900 group-hover:text-black leading-snug line-clamp-1 transition-colors ${
               isRTL ? 'text-right' : 'text-left'
             }`}
-            title={product.name}
+            title={displayName}
           >
-            {product.name}
+            {displayName}
           </h3>
         </div>
 

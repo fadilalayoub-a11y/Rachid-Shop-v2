@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Tag,
   Sparkles,
   ChevronDown,
   ChevronUp,
   Globe,
-  Layers
+  Layers,
+  Loader2,
+  CheckCircle2,
+  Languages
 } from 'lucide-react';
 import {
   MAIN_CATEGORIES,
@@ -14,14 +17,15 @@ import {
 } from '../../../constants/categories';
 import { STORE_BRANDS } from '../../../constants/brands';
 import { ProductStyle, ProductBadge } from '../../../types';
+import { requestProductAiTranslation } from '../../../utils/productLocalization';
 
 export const STYLE_OPTIONS: { id: ProductStyle; nameAr: string; nameEn: string; desc: string; icon: string }[] = [
   {
-    id: 'streetwear',
-    nameAr: 'ستريت وير (لبس الشارع)',
-    nameEn: 'Streetwear',
-    desc: 'قصات أوفرسايز، ستايل أوربان عصري، بولو واسع وسنيكرز',
-    icon: '🔥',
+    id: 'old_money',
+    nameAr: 'أولد ماني (Old Money)',
+    nameEn: 'Old Money',
+    desc: 'فخامة هادئة، بولو راقي، قمصان كتان وموكاسان لوفر',
+    icon: '👑',
   },
   {
     id: 'classic',
@@ -29,6 +33,13 @@ export const STYLE_OPTIONS: { id: ProductStyle; nameAr: string; nameEn: string; 
     nameEn: 'Classic',
     desc: 'قمصان راقية، سراويل قماش، وأحذية جلدية كلاسيكية',
     icon: '👔',
+  },
+  {
+    id: 'streetwear',
+    nameAr: 'ستريت وير (لبس الشارع)',
+    nameEn: 'Streetwear',
+    desc: 'قصات أوفرسايز، ستايل أوربان عصري، بولو واسع وسنيكرز',
+    icon: '🔥',
   },
   {
     id: 'sportswear',
@@ -71,6 +82,10 @@ export const POPULAR_TAGS = [
 interface ProductBasicInfoSectionProps {
   title: string;
   setTitle: (val: string) => void;
+  titleEn?: string;
+  setTitleEn?: (val: string) => void;
+  titleFr?: string;
+  setTitleFr?: (val: string) => void;
   brandId: string;
   setBrandId: (val: string) => void;
   customBrandName: string;
@@ -83,6 +98,10 @@ interface ProductBasicInfoSectionProps {
   setSubcategoryId: (val: string) => void;
   description: string;
   setDescription: (val: string) => void;
+  descriptionEn?: string;
+  setDescriptionEn?: (val: string) => void;
+  descriptionFr?: string;
+  setDescriptionFr?: (val: string) => void;
   badge: ProductBadge;
   setBadge: (val: ProductBadge) => void;
   tagsList: string[];
@@ -103,6 +122,10 @@ interface ProductBasicInfoSectionProps {
 export function ProductBasicInfoSection({
   title,
   setTitle,
+  titleEn,
+  setTitleEn,
+  titleFr,
+  setTitleFr,
   brandId,
   setBrandId,
   customBrandName,
@@ -115,6 +138,10 @@ export function ProductBasicInfoSection({
   setSubcategoryId,
   description,
   setDescription,
+  descriptionEn,
+  setDescriptionEn,
+  descriptionFr,
+  setDescriptionFr,
   badge,
   setBadge,
   tagsList,
@@ -132,30 +159,166 @@ export function ProductBasicInfoSection({
   setSlug
 }: ProductBasicInfoSectionProps) {
   const currentSubcategories = getSubcategoriesForCategory(categoryId);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationSuccess, setTranslationSuccess] = useState(false);
+  const [isLanguagesOpen, setIsLanguagesOpen] = useState(false);
+
+  const handleAutoTranslate = async () => {
+    if (!title.trim() || isTranslating) return;
+    setIsTranslating(true);
+    setTranslationSuccess(false);
+    try {
+      const result = await requestProductAiTranslation(title, description, 'ar');
+      if (result) {
+        if (setTitleEn && result.en?.name) setTitleEn(result.en.name);
+        if (setTitleFr && result.fr?.name) setTitleFr(result.fr.name);
+        if (setDescriptionEn && result.en?.description) setDescriptionEn(result.en.description);
+        if (setDescriptionFr && result.fr?.description) setDescriptionFr(result.fr.description);
+        if (setMetaTitle && !metaTitle && result.en?.name) {
+          setMetaTitle(`${result.en.name} | RACHID SHOP`);
+        }
+        setIsLanguagesOpen(true);
+        setTranslationSuccess(true);
+        setTimeout(() => setTranslationSuccess(false), 4500);
+      }
+    } catch (e) {
+      console.error('Translation error in admin:', e);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* 1. Basic Information Card */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-        <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
-          <Layers className="w-4 h-4 text-blue-600" />
-          <span>المعلومات الأساسية والتصنيف (Basic Info & Category)</span>
+        <h3 className="text-sm font-bold text-gray-900 flex items-center justify-between border-b border-gray-100 pb-3">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-blue-600" />
+            <span>المعلومات الأساسية والتصنيف (Basic Info & Category)</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAutoTranslate}
+            disabled={!title.trim() || isTranslating}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs hover:from-purple-700 hover:to-indigo-700 disabled:opacity-40 transition-all cursor-pointer active:scale-95"
+            title="ترجمة فورية بالذكاء الاصطناعي للاسم والوصف إلى الإنجليزية والفرنسية"
+          >
+            {isTranslating ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>جاري الترجمة الفورية...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>⚡ ترجمة فورية للاسم والوصف</span>
+              </>
+            )}
+          </button>
         </h3>
 
         {/* Product Title */}
         <div>
-          <label className="block text-xs font-bold text-gray-800 mb-1">
-            اسم المنتج (Product Title) <span className="text-rose-500">*</span>
-          </label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-xs font-bold text-gray-800">
+              اسم المنتج (Product Title) <span className="text-rose-500">*</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsLanguagesOpen(!isLanguagesOpen)}
+              className="text-[11px] font-bold text-purple-700 hover:text-purple-900 inline-flex items-center gap-1 cursor-pointer"
+            >
+              <Languages className="w-3.5 h-3.5" />
+              <span>{isLanguagesOpen ? 'إخفاء حقول اللغات' : 'عرض حقول الترجمة (EN / FR)'}</span>
+            </button>
+          </div>
           <input
             type="text"
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="مثال: تيشيرت أوفرسايز قطن مصري فاخر (Oversized Cotton T-Shirt)"
+            placeholder="مثال: قميص كتان كلاسيكي راقي (Classic Linen Shirt)"
             className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden font-bold text-gray-900 bg-gray-50/50"
           />
         </div>
+
+        {/* Translation Alert Banner */}
+        {translationSuccess && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-bold flex items-center gap-2 animate-in fade-in">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>تمت ترجمة اسم ووصف المنتج فورياً بنجاح وبدقة عالية إلى الإنجليزية والفرنسية!</span>
+          </div>
+        )}
+
+        {/* Collapsible / Expandable Multilingual Fields */}
+        {isLanguagesOpen && (
+          <div className="p-4 bg-purple-50/50 border border-purple-100 rounded-xl space-y-3 animate-in fade-in">
+            <div className="text-xs font-bold text-purple-900 flex items-center gap-1.5 mb-1">
+              <Globe className="w-3.5 h-3.5 text-purple-600" />
+              <span>الأسماء والأوصاف باللغات الأخرى (تُعرض تلقائياً للزوار حسب لغة الموقع)</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                  🇬🇧 اسم المنتج بالإنجليزية (English Title)
+                </label>
+                <input
+                  type="text"
+                  value={titleEn || ''}
+                  onChange={(e) => setTitleEn && setTitleEn(e.target.value)}
+                  placeholder="e.g. Classic Luxury Linen Shirt"
+                  dir="ltr"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                  🇫🇷 اسم المنتج بالفرنسية (Titre en Français)
+                </label>
+                <input
+                  type="text"
+                  value={titleFr || ''}
+                  onChange={(e) => setTitleFr && setTitleFr(e.target.value)}
+                  placeholder="ex. Chemise en Lin Haut de Gamme"
+                  dir="ltr"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                  🇬🇧 وصف المنتج بالإنجليزية (English Description)
+                </label>
+                <textarea
+                  rows={2}
+                  value={descriptionEn || ''}
+                  onChange={(e) => setDescriptionEn && setDescriptionEn(e.target.value)}
+                  placeholder="English description for international customers..."
+                  dir="ltr"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                  🇫🇷 وصف المنتج بالفرنسية (Description en Français)
+                </label>
+                <textarea
+                  rows={2}
+                  value={descriptionFr || ''}
+                  onChange={(e) => setDescriptionFr && setDescriptionFr(e.target.value)}
+                  placeholder="Description en français..."
+                  dir="ltr"
+                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Brand & Category Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -230,7 +393,7 @@ export function ProductBasicInfoSection({
           <label className="block text-xs font-bold text-gray-800 mb-2">
             ستايل ونمط الموضة (Fashion Style) <span className="text-rose-500">*</span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
             {STYLE_OPTIONS.map((opt) => (
               <button
                 key={opt.id}

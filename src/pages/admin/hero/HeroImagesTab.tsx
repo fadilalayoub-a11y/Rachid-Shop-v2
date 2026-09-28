@@ -295,6 +295,8 @@ export function HeroImagesTab() {
         // Optional numeric coordinates (only valid finite numbers)
         if (typeof slide.posX_ar === 'number' && !isNaN(slide.posX_ar)) cleanObj.posX_ar = Math.round(slide.posX_ar);
         if (typeof slide.posY_ar === 'number' && !isNaN(slide.posY_ar)) cleanObj.posY_ar = Math.round(slide.posY_ar);
+        if (typeof slide.posX_fr === 'number' && !isNaN(slide.posX_fr)) cleanObj.posX_fr = Math.round(slide.posX_fr);
+        if (typeof slide.posY_fr === 'number' && !isNaN(slide.posY_fr)) cleanObj.posY_fr = Math.round(slide.posY_fr);
         if (typeof slide.posX_en === 'number' && !isNaN(slide.posX_en)) cleanObj.posX_en = Math.round(slide.posX_en);
         if (typeof slide.posY_en === 'number' && !isNaN(slide.posY_en)) cleanObj.posY_en = Math.round(slide.posY_en);
 
@@ -487,6 +489,8 @@ export function HeroImagesTab() {
         <HeroSlideControls
           slide={activeSlide}
           slideIndex={activeSlideIndex}
+          activeLang={previewLang}
+          onSelectLang={setPreviewLang}
           onUpdateField={(field, val) => handleUpdateSlideField(activeSlideIndex, field, val)}
         />
       </div>

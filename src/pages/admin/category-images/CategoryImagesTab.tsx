@@ -7,13 +7,31 @@ import {
   RotateCcw,
   Layers,
   Type,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles,
+  Search,
+  SlidersHorizontal,
+  Globe
 } from 'lucide-react';
 import { DEFAULT_CATEGORIES_DATA, CATEGORIES_STORAGE_KEY } from '../../../components/ShopByCategories';
+import { STYLES_DATA, StyleCard } from '../../../components/ShopByStyle';
 
 export interface CategoryCustomNames {
   ar?: string;
   en?: string;
+  fr?: string;
+}
+
+export interface UnifiedCategoryItem {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  nameFr: string;
+  image: string;
+  link: string;
+  group: 'products' | 'style';
+  groupLabelAr: string;
+  groupLabelEn: string;
 }
 
 export function CategoryImagesTab() {
@@ -24,8 +42,33 @@ export function CategoryImagesTab() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [savedCategoryId, setSavedCategoryId] = useState<string | null>(null);
+  
+  // UI filter & search states
+  const [activeFilterGroup, setActiveFilterGroup] = useState<'all' | 'products' | 'style'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Merge default categories and style categories into a unified list
+  const allCategoryItems: UnifiedCategoryItem[] = [
+    ...DEFAULT_CATEGORIES_DATA.map((cat) => ({
+      ...cat,
+      group: 'products' as const,
+      groupLabelAr: 'تصنيف منتجات',
+      groupLabelEn: 'Product Category',
+    })),
+    ...STYLES_DATA.map((style: StyleCard) => ({
+      id: style.id,
+      nameEn: style.nameEn,
+      nameAr: style.nameAr,
+      nameFr: style.nameFr,
+      image: style.image,
+      link: style.link,
+      group: 'style' as const,
+      groupLabelAr: 'قسم ستايل ومظهر',
+      groupLabelEn: 'Style & Look Section',
+    })),
+  ];
 
   useEffect(() => {
     const docRef = doc(db, 'settings', 'category_images');
@@ -46,14 +89,15 @@ export function CategoryImagesTab() {
               });
             } else {
               Object.entries(data).forEach(([key, val]) => {
-                if (key !== 'images' && key !== 'names' && key !== 'updatedAt' && typeof val === 'string' && val.trim() !== '') {
+                if (key !== 'images' && key !== 'names' && key !== 'customNames' && key !== 'updatedAt' && typeof val === 'string' && val.trim() !== '') {
                   cleanImages[key] = val;
                 }
               });
             }
 
-            if (data.names && typeof data.names === 'object') {
-              Object.entries(data.names).forEach(([key, val]) => {
+            const namesSource = data.names || data.customNames;
+            if (namesSource && typeof namesSource === 'object') {
+              Object.entries(namesSource).forEach(([key, val]) => {
                 if (val && typeof val === 'object') {
                   cleanNames[key] = val as CategoryCustomNames;
                 }
@@ -83,7 +127,7 @@ export function CategoryImagesTab() {
         }
 
         const initial: Record<string, string> = {};
-        DEFAULT_CATEGORIES_DATA.forEach(cat => {
+        allCategoryItems.forEach(cat => {
           initial[cat.id] = cat.image;
         });
         setCategoryImages(initial);
@@ -129,10 +173,21 @@ export function CategoryImagesTab() {
       }
 
       const uploadedUrl = uploadData.secure_url;
-      setCategoryImages(prev => ({
-        ...prev,
+      const updatedImages = {
+        ...categoryImages,
         [categoryId]: uploadedUrl
-      }));
+      };
+      setCategoryImages(updatedImages);
+
+      // Auto save single upload to persistence
+      const payload = {
+        images: updatedImages,
+        names: categoryNames,
+        customNames: categoryNames,
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, 'settings', 'category_images'), payload, { merge: true });
+      localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(payload));
 
       setSavedCategoryId(categoryId);
       setTimeout(() => setSavedCategoryId(null), 3000);
@@ -144,7 +199,7 @@ export function CategoryImagesTab() {
     }
   };
 
-  const handleNameChange = (categoryId: string, lang: 'ar' | 'en', value: string) => {
+  const handleNameChange = (categoryId: string, lang: 'ar' | 'en' | 'fr', value: string) => {
     setCategoryNames(prev => ({
       ...prev,
       [categoryId]: {
@@ -162,12 +217,12 @@ export function CategoryImagesTab() {
         JSON.stringify({
           images: categoryImages,
           names: categoryNames,
+          customNames: categoryNames,
           updatedAt: new Date().toISOString()
         })
       );
 
       await setDoc(doc(db, 'settings', 'category_images'), payload);
-
       localStorage.setItem(CATEGORIES_STORAGE_KEY, JSON.stringify(payload));
 
       setSaveSuccess(true);
@@ -181,7 +236,7 @@ export function CategoryImagesTab() {
   };
 
   const handleReset = (categoryId: string) => {
-    const defaultCat = DEFAULT_CATEGORIES_DATA.find(c => c.id === categoryId);
+    const defaultCat = allCategoryItems.find(c => c.id === categoryId);
     if (defaultCat) {
       setCategoryImages(prev => ({
         ...prev,
@@ -195,39 +250,115 @@ export function CategoryImagesTab() {
     }
   };
 
+  // Filtering categories
+  const filteredCategories = allCategoryItems.filter(item => {
+    const matchesGroup = activeFilterGroup === 'all' || item.group === activeFilterGroup;
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return matchesGroup;
+
+    const customName = categoryNames[item.id];
+    const matchesName = 
+      item.nameAr.toLowerCase().includes(q) ||
+      item.nameEn.toLowerCase().includes(q) ||
+      item.nameFr.toLowerCase().includes(q) ||
+      (customName?.ar && customName.ar.toLowerCase().includes(q)) ||
+      (customName?.en && customName.en.toLowerCase().includes(q)) ||
+      (customName?.fr && customName.fr.toLowerCase().includes(q));
+
+    return matchesGroup && matchesName;
+  });
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
       {/* Top Header Card */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-200/80 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-gray-900 flex items-center gap-2">
-            <Layers className="w-6 h-6 text-blue-600" />
-            <span>تخصيص صور وعناوين الأقسام (تسوق حسب الفئات)</span>
-          </h2>
-          <p className="text-xs text-gray-500 mt-1">
-            قم بتغيير صورة أي قسم أو تعديل اسمه ليظهر فوراً في الواجهة الرئيسية للمتجر
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-xl bg-blue-50 text-blue-600">
+              <Layers className="w-5 h-5" />
+            </span>
+            <h2 className="text-xl font-black text-stone-900">
+              تخصيص صور وعناوين الأقسام (تسوق حسب الفئات + أقسام الستايل والمظهر)
+            </h2>
+          </div>
+          <p className="text-xs text-stone-500 mt-1.5 leading-relaxed">
+            يمكنك تغيير صورة أو تعديل اسم أي قسم (بالعربية، الفرنسية، والإنجليزية) لتظهر التعديلات فوراً وبشكل حي في واجهة المتجر.
           </p>
         </div>
 
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-blue-500/20 active:scale-95 flex items-center gap-2 cursor-pointer"
+          className="px-6 py-2.5 bg-stone-950 hover:bg-stone-800 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer"
         >
           {isSaving ? (
             <span>جاري الحفظ...</span>
           ) : saveSuccess ? (
             <>
-              <Check className="w-4 h-4 text-emerald-300" />
+              <Check className="w-4 h-4 text-emerald-400" />
               <span>تم الحفظ بنجاح!</span>
             </>
           ) : (
             <>
               <Check className="w-4 h-4" />
-              <span>حفظ جميع التغييرات</span>
+              <span>حفظ جميع التعديلات</span>
             </>
           )}
         </button>
+      </div>
+
+      {/* Filter Tabs & Search Bar */}
+      <div className="bg-white p-4 rounded-2xl border border-stone-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        {/* Filter buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveFilterGroup('all')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeFilterGroup === 'all'
+                ? 'bg-stone-950 text-white shadow-xs'
+                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+            }`}
+          >
+            جميع الأقسام ({allCategoryItems.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveFilterGroup('products')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeFilterGroup === 'products'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span>تصنيفات المنتجات (14)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveFilterGroup('style')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeFilterGroup === 'style'
+                ? 'bg-purple-600 text-white shadow-xs'
+                : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>أقسام الستايل ({STYLES_DATA.length})</span>
+          </button>
+        </div>
+
+        {/* Search Input */}
+        <div className="relative min-w-[220px]">
+          <Search className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="بحث عن قسم..."
+            className="w-full pl-3 pr-9 py-2 text-xs bg-stone-50 border border-stone-200 rounded-xl focus:ring-2 focus:ring-stone-950 focus:outline-hidden"
+          />
+        </div>
       </div>
 
       {errorMessage && (
@@ -238,30 +369,48 @@ export function CategoryImagesTab() {
 
       {/* Grid of Categories */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {DEFAULT_CATEGORIES_DATA.map((category) => {
+        {filteredCategories.map((category) => {
           const currentImage = categoryImages[category.id] || category.image;
           const customNameAr = categoryNames[category.id]?.ar || '';
+          const customNameFr = categoryNames[category.id]?.fr || '';
           const customNameEn = categoryNames[category.id]?.en || '';
           const isUploadingThis = uploadingCategory === category.id;
           const isJustSaved = savedCategoryId === category.id;
 
+          const isStyleCategory = category.group === 'style';
+
           return (
             <div
               key={category.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:border-blue-200 transition-all group"
+              className={`bg-white rounded-2xl shadow-xs border overflow-hidden flex flex-col transition-all group ${
+                isStyleCategory ? 'border-purple-200/80 hover:border-purple-300' : 'border-stone-200/80 hover:border-blue-300'
+              }`}
             >
               {/* Category Image Box */}
-              <div className="relative aspect-4/3 w-full bg-gray-100 overflow-hidden">
+              <div className="relative aspect-4/3 w-full bg-stone-100 overflow-hidden">
                 <img
                   src={currentImage}
                   alt={category.nameAr}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-between p-4">
-                  <span className="self-start px-2.5 py-1 bg-black/60 backdrop-blur-md text-white text-[11px] font-bold rounded-lg">
-                    {category.nameEn}
-                  </span>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-between p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 bg-black/60 backdrop-blur-md text-white text-[11px] font-bold rounded-lg uppercase tracking-wider">
+                      {category.nameEn}
+                    </span>
+
+                    {isStyleCategory ? (
+                      <span className="px-2.5 py-1 bg-purple-600/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>قسم ستايل ومظهر</span>
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-1 bg-blue-600/90 backdrop-blur-md text-white text-[10px] font-bold rounded-lg">
+                        تصنيف منتجات
+                      </span>
+                    )}
+                  </div>
 
                   <div>
                     <h3 className="text-white font-black text-lg drop-shadow-sm">
@@ -271,47 +420,74 @@ export function CategoryImagesTab() {
                 </div>
 
                 {isUploadingThis && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center text-white text-xs font-bold gap-2">
+                  <div className="absolute inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center text-white text-xs font-bold gap-2">
                     <span className="animate-spin text-lg">⏳</span>
-                    <span>جاري رفع الصورة...</span>
+                    <span>جاري رفع الصورة إلى Cloudinary...</span>
                   </div>
                 )}
               </div>
 
               {/* Controls */}
-              <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                <div className="space-y-2">
+              <div className="p-4 space-y-3.5 flex-1 flex flex-col justify-between bg-stone-50/40">
+                <div className="space-y-2.5">
+                  {/* Arabic Name */}
                   <div>
-                    <label className="text-[11px] font-bold text-gray-700 mb-1 flex items-center gap-1">
-                      <Type className="w-3 h-3 text-blue-600" />
-                      <span>الاسم بالعربية:</span>
+                    <label className="text-[11px] font-bold text-stone-700 mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Type className="w-3 h-3 text-blue-600" />
+                        <span>الاسم بالعربية (🇸🇦):</span>
+                      </span>
+                      <span className="text-[10px] text-stone-400 font-normal">الافتراضي: {category.nameAr}</span>
                     </label>
                     <input
                       type="text"
                       value={customNameAr}
                       onChange={(e) => handleNameChange(category.id, 'ar', e.target.value)}
                       placeholder={category.nameAr}
-                      className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-stone-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                     />
                   </div>
 
+                  {/* French Name */}
                   <div>
-                    <label className="text-[11px] font-bold text-gray-700 mb-1 flex items-center gap-1">
-                      <Type className="w-3 h-3 text-gray-400" />
-                      <span>الاسم بالإنجليزية (English):</span>
+                    <label className="text-[11px] font-bold text-stone-700 mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Globe className="w-3 h-3 text-indigo-500" />
+                        <span>الاسم بالفرنسية (🇫🇷 Français):</span>
+                      </span>
+                      <span className="text-[10px] text-stone-400 font-normal" dir="ltr">{category.nameFr}</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={customNameFr}
+                      onChange={(e) => handleNameChange(category.id, 'fr', e.target.value)}
+                      placeholder={category.nameFr}
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-stone-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                      dir="ltr"
+                    />
+                  </div>
+
+                  {/* English Name */}
+                  <div>
+                    <label className="text-[11px] font-bold text-stone-700 mb-1 flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Type className="w-3 h-3 text-stone-400" />
+                        <span>الاسم بالإنجليزية (🇬🇧 English):</span>
+                      </span>
+                      <span className="text-[10px] text-stone-400 font-normal" dir="ltr">{category.nameEn}</span>
                     </label>
                     <input
                       type="text"
                       value={customNameEn}
                       onChange={(e) => handleNameChange(category.id, 'en', e.target.value)}
                       placeholder={category.nameEn}
-                      className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
+                      className="w-full px-3 py-1.5 text-xs bg-white border border-stone-200 rounded-lg focus:ring-2 focus:ring-stone-950 focus:outline-hidden"
                       dir="ltr"
                     />
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-gray-100 flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-stone-200/60 flex items-center justify-between gap-2">
                   <input
                     type="file"
                     accept="image/*"
@@ -327,7 +503,11 @@ export function CategoryImagesTab() {
                     type="button"
                     onClick={() => fileInputRefs.current[category.id]?.click()}
                     disabled={isUploadingThis}
-                    className="flex-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    className={`flex-1 px-3 py-2 text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs ${
+                      isStyleCategory 
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                        : 'bg-stone-950 hover:bg-stone-800 text-white'
+                    }`}
                   >
                     <Upload className="w-3.5 h-3.5" />
                     <span>تغيير الصورة</span>
@@ -336,7 +516,7 @@ export function CategoryImagesTab() {
                   <button
                     type="button"
                     onClick={() => handleReset(category.id)}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                    className="p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-200/60 rounded-xl transition-colors cursor-pointer"
                     title="استعادة الصورة والاسم الافتراضي"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
@@ -344,9 +524,9 @@ export function CategoryImagesTab() {
                 </div>
 
                 {isJustSaved && (
-                  <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>تم تحديث صورة القسم!</span>
+                  <div className="text-[11px] text-emerald-600 font-bold flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>تم حفظ صورة وبيانات القسم بنجاح!</span>
                   </div>
                 )}
               </div>

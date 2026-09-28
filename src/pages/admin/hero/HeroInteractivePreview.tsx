@@ -32,16 +32,51 @@ export function HeroInteractivePreview({
   const spreadMode = slide?.textSpreadMode || 'grouped';
   const isDark = slide?.textColorTheme === 'dark';
   const overlay = slide?.overlayStyle || 'charcoal-gradient';
-  const fontF = slide?.fontFamily === 'serif' ? 'font-serif' : slide?.fontFamily === 'mono' ? 'font-mono' : 'font-sans';
+  const fontF = (() => {
+    switch (slide?.fontFamily) {
+      case 'almarai': return 'font-almarai';
+      case 'tajawal': return 'font-tajawal';
+      case 'ibm': return 'font-ibm';
+      case 'amiri': return 'font-amiri';
+      case 'cinzel': return 'font-cinzel';
+      case 'cormorant': return 'font-cormorant';
+      case 'montserrat': return 'font-montserrat';
+      case 'playfair': return 'font-playfair';
+      case 'cairo': return 'font-cairo';
+      case 'serif': return 'font-serif';
+      case 'mono': return 'font-mono';
+      case 'sans':
+      default:
+        return 'font-cairo';
+    }
+  })();
   const ctaStyle = slide?.ctaStyle || 'white-solid';
 
   // Pinpoint coordinates
-  const pX = isAr ? slide?.posX_ar : slide?.posX_en;
-  const pY = isAr ? slide?.posY_ar : slide?.posY_en;
+  const pX = previewLang === 'ar' 
+    ? slide?.posX_ar 
+    : previewLang === 'fr' 
+    ? (slide?.posX_fr ?? slide?.posX_en)
+    : slide?.posX_en;
+    
+  const pY = previewLang === 'ar' 
+    ? slide?.posY_ar 
+    : previewLang === 'fr' 
+    ? (slide?.posY_fr ?? slide?.posY_en)
+    : slide?.posY_en;
+    
   const hasCoord = typeof pX === 'number' && typeof pY === 'number';
 
   const hJustify = pos === 'center' ? 'justify-center' : pos === 'end' ? 'justify-end' : 'justify-start';
   const vPos = vAlign === 'top' ? 'justify-start pt-6 sm:pt-8' : vAlign === 'bottom' ? 'justify-end pb-6 sm:pb-8' : 'justify-center';
+
+  const titleSize = slide?.titleSize || 'large';
+  const previewTitleSizeClass =
+    titleSize === 'xlarge'
+      ? 'text-xl sm:text-3xl md:text-4xl lg:text-5xl font-black'
+      : titleSize === 'normal'
+      ? 'text-sm sm:text-base md:text-lg font-bold'
+      : 'text-base sm:text-xl md:text-2xl lg:text-3xl font-black';
 
   const previewTitle = previewLang === 'ar' 
     ? (slide?.title_ar || slide?.title || 'عالم متكامل من الأناقة والتميز')
@@ -79,6 +114,11 @@ export function HeroInteractivePreview({
       const posY = Math.round(clickY);
       onUpdateField('posX_ar', posX);
       onUpdateField('posY_ar', posY);
+    } else if (previewLang === 'fr') {
+      const posX = Math.round(clickX);
+      const posY = Math.round(clickY);
+      onUpdateField('posX_fr', posX);
+      onUpdateField('posY_fr', posY);
     } else {
       const posX = Math.round(clickX);
       const posY = Math.round(clickY);
@@ -91,6 +131,9 @@ export function HeroInteractivePreview({
     if (previewLang === 'ar') {
       onUpdateField('posX_ar', undefined);
       onUpdateField('posY_ar', undefined);
+    } else if (previewLang === 'fr') {
+      onUpdateField('posX_fr', undefined);
+      onUpdateField('posY_fr', undefined);
     } else {
       onUpdateField('posX_en', undefined);
       onUpdateField('posY_en', undefined);
@@ -150,7 +193,7 @@ export function HeroInteractivePreview({
       {/* Interactive Screen Canvas with Real-Time Updates */}
       <div
         onClick={handleCanvasClick}
-        className="relative w-full h-[280px] sm:h-[360px] md:h-[420px] rounded-2xl overflow-hidden shadow-2xl border border-stone-700/80 bg-stone-950 cursor-crosshair select-none group/canvas"
+        className="relative w-full h-[320px] sm:h-[400px] md:h-[480px] rounded-2xl overflow-hidden shadow-2xl border border-stone-700/80 bg-stone-950 cursor-crosshair select-none group/canvas"
         title="انقر في أي مكان داخل الصورة لنقل النصوص فوراً"
         dir={isAr ? 'rtl' : 'ltr'}
       >
@@ -164,22 +207,22 @@ export function HeroInteractivePreview({
         {/* Overlays / Gradients */}
         {overlay === 'charcoal-gradient' && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/90 via-stone-950/40 to-transparent sm:hidden pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/95 via-stone-950/45 to-transparent sm:hidden pointer-events-none" />
             <div className={`absolute inset-0 hidden sm:block pointer-events-none ${
               isAr
-                ? 'bg-gradient-to-tl from-stone-950/95 via-stone-950/50 to-transparent to-70%'
-                : 'bg-gradient-to-tr from-stone-950/95 via-stone-950/50 to-transparent to-70%'
+                ? 'bg-gradient-to-l from-stone-950/95 via-stone-950/60 via-45% to-transparent to-75%'
+                : 'bg-gradient-to-r from-stone-950/95 via-stone-950/60 via-45% to-transparent to-75%'
             }`} />
           </>
         )}
 
         {overlay === 'light-gradient' && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/50 to-transparent sm:hidden pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/50 to-transparent sm:hidden pointer-events-none" />
             <div className={`absolute inset-0 hidden sm:block pointer-events-none ${
               isAr
-                ? 'bg-gradient-to-tl from-white/95 via-white/60 to-transparent to-70%'
-                : 'bg-gradient-to-tr from-white/95 via-white/60 to-transparent to-70%'
+                ? 'bg-gradient-to-l from-white/95 via-white/70 via-45% to-transparent to-75%'
+                : 'bg-gradient-to-r from-white/95 via-white/70 via-45% to-transparent to-75%'
             }`} />
           </>
         )}
@@ -231,7 +274,7 @@ export function HeroInteractivePreview({
                 </span>
               )}
 
-              <h3 className={`text-lg sm:text-2xl md:text-3xl font-black leading-tight drop-shadow-md ${
+              <h3 className={`${previewTitleSizeClass} leading-tight drop-shadow-md ${
                 isDark ? 'text-stone-950' : 'text-white'
               }`}>
                 {previewTitle}
@@ -276,7 +319,7 @@ export function HeroInteractivePreview({
                       </span>
                     )}
 
-                    <h3 className={`text-lg sm:text-2xl md:text-3xl font-black leading-tight drop-shadow-md ${
+                    <h3 className={`${previewTitleSizeClass} leading-tight drop-shadow-md ${
                       isDark ? 'text-stone-950' : 'text-white'
                     }`}>
                       {previewTitle}
@@ -323,7 +366,7 @@ export function HeroInteractivePreview({
                     </span>
                   )}
 
-                  <h3 className={`text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight drop-shadow-md ${
+                  <h3 className={`${previewTitleSizeClass} leading-tight drop-shadow-md ${
                     isDark ? 'text-stone-950' : 'text-white'
                   }`}>
                     {previewTitle}

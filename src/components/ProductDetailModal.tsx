@@ -4,6 +4,7 @@ import { ArrowRight, ArrowLeft, ShoppingCart, Bell, CheckCircle2, ZoomIn, Shield
 import { NotifyMeModal } from './NotifyMeModal';
 import { normalizeProductImageUrl } from '../utils/image';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedProductName, getLocalizedProductDescription, subscribeToTranslationUpdates } from '../utils/productLocalization';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -18,13 +19,34 @@ export function ProductDetailModal({
   onClose,
   onAddToCart,
 }: ProductDetailModalProps) {
-  const { t, isRTL } = useLanguage();
+  const { t, isRTL, language } = useLanguage();
   const [selectedSize, setSelectedSize] = useState<string>('');
   const [activeImage, setActiveImage] = useState<string>(product?.image || '');
   const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
   const [addedToast, setAddedToast] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  
+  // Instant AI Live Translation state
+  const [currentName, setCurrentName] = useState<string>('');
+  const [currentDesc, setCurrentDesc] = useState<string>('');
+
+  useEffect(() => {
+    if (product) {
+      setCurrentName(getLocalizedProductName(product, language));
+      setCurrentDesc(getLocalizedProductDescription(product, language));
+    }
+  }, [product, language]);
+
+  // Subscribe to runtime live translation arrivals
+  useEffect(() => {
+    return subscribeToTranslationUpdates(() => {
+      if (product) {
+        setCurrentName(getLocalizedProductName(product, language));
+        setCurrentDesc(getLocalizedProductDescription(product, language));
+      }
+    });
+  }, [product, language]);
 
   const handleShareProduct = async () => {
     const shareUrl = window.location.href;
@@ -241,7 +263,7 @@ export function ProductDetailModal({
                 <div className="space-y-4">
                   <div>
                     <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">
-                      {product.name}
+                      {currentName || product.name}
                     </h1>
                     
                     {/* Price */}
@@ -264,9 +286,11 @@ export function ProductDetailModal({
 
                   {/* Description */}
                   <div className="pt-2 border-t border-gray-100">
-                    <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5">{t.descriptionTitle}</h2>
-                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                      {product.description || t.defaultProductDescription}
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h2 className="text-xs font-medium text-gray-400 uppercase tracking-wider">{t.descriptionTitle}</h2>
+                    </div>
+                    <p className="text-sm sm:text-base text-gray-600 leading-relaxed whitespace-pre-line">
+                      {currentDesc || product.description || t.defaultProductDescription}
                     </p>
                   </div>
 

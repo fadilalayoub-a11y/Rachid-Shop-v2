@@ -1,6 +1,5 @@
 import { useLanguage } from '../context/LanguageContext';
 import { Logo } from './Logo';
-import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Footer() {
   const { t } = useLanguage();
@@ -49,18 +48,11 @@ export function Footer() {
         </div>
 
         {/* 2. الشريط السفلي (Sub-footer) */}
-        <div className="py-6 border-t border-stone-200/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
-          
-          {/* الجانب الأيسر: قائمة اختيار اللغة والمنطقة */}
-          <div className="flex items-center">
-            <LanguageSwitcher variant="footer" />
-          </div>
-
-          {/* الجانب الأيمن: نص حقوق الملكية فقط */}
+        <div className="py-6 border-t border-stone-200/60 flex items-center justify-center text-center text-xs text-stone-500">
+          {/* نص حقوق الملكية فقط */}
           <p className="text-xs text-stone-400 font-normal">
             &copy; 2026 RACHID SHOP. {t.allRightsReserved}
           </p>
-
         </div>
 
       </div>
