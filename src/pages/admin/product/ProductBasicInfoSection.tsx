@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
 import {
-  Tag,
   Sparkles,
   ChevronDown,
   ChevronUp,
   Globe,
   Layers,
-  Loader2,
-  CheckCircle2,
-  Languages
+  Languages,
+  PenTool,
 } from 'lucide-react';
 import {
   MAIN_CATEGORIES,
-  STORE_SUBCATEGORIES,
   getSubcategoriesForCategory
 } from '../../../constants/categories';
 import { STORE_BRANDS } from '../../../constants/brands';
 import { ProductStyle, ProductBadge } from '../../../types';
-import { requestProductAiTranslation } from '../../../utils/productLocalization';
 
 export const STYLE_OPTIONS: { id: ProductStyle; nameAr: string; nameEn: string; desc: string; icon: string }[] = [
   {
@@ -159,34 +155,7 @@ export function ProductBasicInfoSection({
   setSlug
 }: ProductBasicInfoSectionProps) {
   const currentSubcategories = getSubcategoriesForCategory(categoryId);
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [translationSuccess, setTranslationSuccess] = useState(false);
-  const [isLanguagesOpen, setIsLanguagesOpen] = useState(false);
-
-  const handleAutoTranslate = async () => {
-    if (!title.trim() || isTranslating) return;
-    setIsTranslating(true);
-    setTranslationSuccess(false);
-    try {
-      const result = await requestProductAiTranslation(title, description, 'ar');
-      if (result) {
-        if (setTitleEn && result.en?.name) setTitleEn(result.en.name);
-        if (setTitleFr && result.fr?.name) setTitleFr(result.fr.name);
-        if (setDescriptionEn && result.en?.description) setDescriptionEn(result.en.description);
-        if (setDescriptionFr && result.fr?.description) setDescriptionFr(result.fr.description);
-        if (setMetaTitle && !metaTitle && result.en?.name) {
-          setMetaTitle(`${result.en.name} | RACHID SHOP`);
-        }
-        setIsLanguagesOpen(true);
-        setTranslationSuccess(true);
-        setTimeout(() => setTranslationSuccess(false), 4500);
-      }
-    } catch (e) {
-      console.error('Translation error in admin:', e);
-    } finally {
-      setIsTranslating(false);
-    }
-  };
+  const [isLanguagesOpen, setIsLanguagesOpen] = useState(true);
 
   return (
     <div className="space-y-6">
@@ -198,42 +167,16 @@ export function ProductBasicInfoSection({
             <span>المعلومات الأساسية والتصنيف (Basic Info & Category)</span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleAutoTranslate}
-            disabled={!title.trim() || isTranslating}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs hover:from-purple-700 hover:to-indigo-700 disabled:opacity-40 transition-all cursor-pointer active:scale-95"
-            title="ترجمة فورية بالذكاء الاصطناعي للاسم والوصف إلى الإنجليزية والفرنسية"
-          >
-            {isTranslating ? (
-              <>
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span>جاري الترجمة الفورية...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>⚡ ترجمة فورية للاسم والوصف</span>
-              </>
-            )}
-          </button>
+          <span className="text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-lg">
+            إدخال وترجمة يدوية (Manual)
+          </span>
         </h3>
 
-        {/* Product Title */}
+        {/* Product Title (Arabic / Primary) */}
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-bold text-gray-800">
-              اسم المنتج (Product Title) <span className="text-rose-500">*</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => setIsLanguagesOpen(!isLanguagesOpen)}
-              className="text-[11px] font-bold text-purple-700 hover:text-purple-900 inline-flex items-center gap-1 cursor-pointer"
-            >
-              <Languages className="w-3.5 h-3.5" />
-              <span>{isLanguagesOpen ? 'إخفاء حقول اللغات' : 'عرض حقول الترجمة (EN / FR)'}</span>
-            </button>
-          </div>
+          <label className="block text-xs font-bold text-gray-800 mb-1">
+            اسم المنتج بالعربية (Product Title) <span className="text-rose-500">*</span>
+          </label>
           <input
             type="text"
             required
@@ -244,81 +187,128 @@ export function ProductBasicInfoSection({
           />
         </div>
 
-        {/* Translation Alert Banner */}
-        {translationSuccess && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-bold flex items-center gap-2 animate-in fade-in">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>تمت ترجمة اسم ووصف المنتج فورياً بنجاح وبدقة عالية إلى الإنجليزية والفرنسية!</span>
+        {/* Description (Arabic / Primary) */}
+        <div>
+          <label className="block text-xs font-bold text-gray-800 mb-1">
+            وصف المنتج والمواصفات بالعربية (Description)
+          </label>
+          <textarea
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="اكتب وصفاً جذاباً يتضمن نوع القماش، تعليمات الغسيل، ومميزات القطعة..."
+            className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden text-gray-800 bg-gray-50/30"
+          />
+        </div>
+
+        {/* Dedicated Manual Translation Section for Title and Description */}
+        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-b from-indigo-50/40 to-blue-50/20 p-4 space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-100 pb-2.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-indigo-950">
+              <Languages className="w-4 h-4 text-indigo-600" />
+              <span>الترجمة اليدوية للاسم والوصف (Manual Translations - EN / FR)</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsLanguagesOpen(!isLanguagesOpen)}
+              className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 inline-flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <span>{isLanguagesOpen ? 'تصغير حقول اللغات' : 'توسيع حقول الترجمة اليدوية'}</span>
+              {isLanguagesOpen ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </button>
           </div>
-        )}
 
-        {/* Collapsible / Expandable Multilingual Fields */}
-        {isLanguagesOpen && (
-          <div className="p-4 bg-purple-50/50 border border-purple-100 rounded-xl space-y-3 animate-in fade-in">
-            <div className="text-xs font-bold text-purple-900 flex items-center gap-1.5 mb-1">
-              <Globe className="w-3.5 h-3.5 text-purple-600" />
-              <span>الأسماء والأوصاف باللغات الأخرى (تُعرض تلقائياً للزوار حسب لغة الموقع)</span>
-            </div>
+          <p className="text-[11px] text-gray-600 leading-relaxed">
+            أدخل الترجمة اليدوية لاسم ووصف المنتج باللغتين الإنجليزية والفرنسية لعرضها للعملاء حسب لغة الموقع.
+          </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                  🇬🇧 اسم المنتج بالإنجليزية (English Title)
-                </label>
-                <input
-                  type="text"
-                  value={titleEn || ''}
-                  onChange={(e) => setTitleEn && setTitleEn(e.target.value)}
-                  placeholder="e.g. Classic Luxury Linen Shirt"
-                  dir="ltr"
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                  🇫🇷 اسم المنتج بالفرنسية (Titre en Français)
-                </label>
-                <input
-                  type="text"
-                  value={titleFr || ''}
-                  onChange={(e) => setTitleFr && setTitleFr(e.target.value)}
-                  placeholder="ex. Chemise en Lin Haut de Gamme"
-                  dir="ltr"
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
-                />
-              </div>
-            </div>
+          {isLanguagesOpen && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 animate-in fade-in duration-200">
+              {/* English Manual Translation */}
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900">
+                    <span className="text-base leading-none">🇬🇧</span>
+                    <span>اللغة الإنجليزية (English)</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 font-mono">Manual Entry</span>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                  🇬🇧 وصف المنتج بالإنجليزية (English Description)
-                </label>
-                <textarea
-                  rows={2}
-                  value={descriptionEn || ''}
-                  onChange={(e) => setDescriptionEn && setDescriptionEn(e.target.value)}
-                  placeholder="English description for international customers..."
-                  dir="ltr"
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
-                />
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    اسم المنتج بالإنجليزية (Product Title)
+                  </label>
+                  <input
+                    type="text"
+                    value={titleEn || ''}
+                    onChange={(e) => setTitleEn && setTitleEn(e.target.value)}
+                    placeholder="e.g. Classic Luxury Linen Shirt"
+                    dir="ltr"
+                    className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50/40 focus:bg-white focus:ring-2 focus:ring-blue-500 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    وصف المنتج بالإنجليزية (English Description)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={descriptionEn || ''}
+                    onChange={(e) => setDescriptionEn && setDescriptionEn(e.target.value)}
+                    placeholder="Enter manual English description..."
+                    dir="ltr"
+                    className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50/40 focus:bg-white focus:ring-2 focus:ring-blue-500 font-medium resize-none"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">
-                  🇫🇷 وصف المنتج بالفرنسية (Description en Français)
-                </label>
-                <textarea
-                  rows={2}
-                  value={descriptionFr || ''}
-                  onChange={(e) => setDescriptionFr && setDescriptionFr(e.target.value)}
-                  placeholder="Description en français..."
-                  dir="ltr"
-                  className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white"
-                />
+
+              {/* French Manual Translation */}
+              <div className="bg-white p-3.5 rounded-xl border border-gray-200 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900">
+                    <span className="text-base leading-none">🇫🇷</span>
+                    <span>اللغة الفرنسية (Français)</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 font-mono">Saisie manuelle</span>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    اسم المنتج بالفرنسية (Titre du produit)
+                  </label>
+                  <input
+                    type="text"
+                    value={titleFr || ''}
+                    onChange={(e) => setTitleFr && setTitleFr(e.target.value)}
+                    placeholder="ex. Chemise en Lin Haut de Gamme"
+                    dir="ltr"
+                    className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50/40 focus:bg-white focus:ring-2 focus:ring-blue-500 font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">
+                    وصف المنتج بالفرنسية (Description en Français)
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={descriptionFr || ''}
+                    onChange={(e) => setDescriptionFr && setDescriptionFr(e.target.value)}
+                    placeholder="Entrez la description manuelle en français..."
+                    dir="ltr"
+                    className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg bg-gray-50/40 focus:bg-white focus:ring-2 focus:ring-blue-500 font-medium resize-none"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Brand & Category Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -423,20 +413,6 @@ export function ProductBasicInfoSection({
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Description */}
-        <div>
-          <label className="block text-xs font-bold text-gray-800 mb-1">
-            وصف المنتج والمواصفات (Description)
-          </label>
-          <textarea
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="اكتب وصفاً جذاباً يتضمن نوع القماش، تعليمات الغسيل، ومميزات القطعة..."
-            className="w-full px-3.5 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden text-gray-800 bg-gray-50/30"
-          />
         </div>
       </div>
 

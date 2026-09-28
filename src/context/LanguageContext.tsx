@@ -599,18 +599,37 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  // Main/Default language is English ('en') as requested by user
+  // 1. الأولوية الأولى: استخراج لغة الصفحة من رابط URL: ?lang=ar | en | fr (ضروري جداً لبوت قوقل Googlebot والمشاركة)
   const [language, setLanguageState] = useState<Language>(() => {
-    const saved = localStorage.getItem('app_language') as Language;
-    if (saved && (saved === 'en' || saved === 'ar' || saved === 'fr')) {
-      return saved;
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlLang = urlParams.get('lang')?.toLowerCase();
+      if (urlLang === 'ar' || urlLang === 'en' || urlLang === 'fr') {
+        return urlLang as Language;
+      }
     }
-    return 'en'; // Default primary language is English
+
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('app_language') as Language;
+      if (saved && (saved === 'en' || saved === 'ar' || saved === 'fr')) {
+        return saved;
+      }
+    }
+
+    return 'ar'; // اللغة الافتراضية
   });
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('app_language', lang);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('app_language', lang);
+    }
+    // تحديث رابط الـ URL برفق مع الحفاظ على بقية المعاملات لتمكين الروبوتات والزوار من مشاركة الرابط بنفس اللغة
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', lang);
+      window.history.replaceState({}, '', url.toString());
+    }
   };
 
   const isRTL = language === 'ar';
@@ -618,6 +637,18 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = language;
     document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+
+    // الاستماع لتغييرات المتصفح للتنقل بين الروابط المختلفة اللغات
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlLang = urlParams.get('lang')?.toLowerCase();
+      if (urlLang && (urlLang === 'ar' || urlLang === 'en' || urlLang === 'fr') && urlLang !== language) {
+        setLanguageState(urlLang as Language);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [language, isRTL]);
 
   const value: LanguageContextType = {

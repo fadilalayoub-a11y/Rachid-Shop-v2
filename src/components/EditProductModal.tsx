@@ -2,10 +2,9 @@ import { useState, useEffect, FormEvent, useRef } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product, ProductStyle } from '../types';
-import { X, Plus, Trash2, Image as ImageIcon, Loader2, UploadCloud, Star, Sparkles, Languages, CheckCircle2, Globe } from 'lucide-react';
+import { X, Plus, Trash2, Image as ImageIcon, Loader2, UploadCloud, Star, Languages, Globe } from 'lucide-react';
 import { normalizeProductImageUrl } from '../utils/image';
 import { STORE_SUBCATEGORIES, getSubcategoriesForCategory } from '../constants/categories';
-import { requestProductAiTranslation } from '../utils/productLocalization';
 
 interface EditProductModalProps {
   product: Product | null;
@@ -21,9 +20,7 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
   const [description, setDescription] = useState('');
   const [descriptionEn, setDescriptionEn] = useState('');
   const [descriptionFr, setDescriptionFr] = useState('');
-  const [isTranslating, setIsTranslating] = useState(false);
-  const [showTranslations, setShowTranslations] = useState(false);
-  const [transSuccess, setTransSuccess] = useState(false);
+  const [showTranslations, setShowTranslations] = useState(true);
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [category, setCategory] = useState<'clothes' | 'shoes' | 'accessories'>('clothes');
@@ -76,8 +73,7 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
         setInventory([{ size: '', stock: '' }]);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product?.id]);
+  }, [product]);
 
   if (!isOpen || !product) return null;
 
@@ -86,28 +82,6 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
     const filesArray = Array.from(files).filter(f => f.type.startsWith('image/'));
     if (filesArray.length > 0) {
       setNewImageFiles(prev => [...prev, ...filesArray]);
-    }
-  };
-
-  const handleTranslate = async () => {
-    if (!name.trim() || isTranslating) return;
-    setIsTranslating(true);
-    setTransSuccess(false);
-    try {
-      const res = await requestProductAiTranslation(name, description, 'ar');
-      if (res) {
-        if (res.en?.name) setNameEn(res.en.name);
-        if (res.fr?.name) setNameFr(res.fr.name);
-        if (res.en?.description) setDescriptionEn(res.en.description);
-        if (res.fr?.description) setDescriptionFr(res.fr.description);
-        setShowTranslations(true);
-        setTransSuccess(true);
-        setTimeout(() => setTransSuccess(false), 4500);
-      }
-    } catch (err: any) {
-      console.error('Translation error in edit modal:', err);
-    } finally {
-      setIsTranslating(false);
     }
   };
 
@@ -248,36 +222,17 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
           <form onSubmit={handleUpdate} className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-gray-700">اسم المنتج</label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleTranslate}
-                    disabled={!name.trim() || isTranslating}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-50 transition-all cursor-pointer shadow-xs active:scale-95"
-                    title="ترجمة فورية بالذكاء الاصطناعي إلى الإنجليزية والفرنسية"
-                  >
-                    {isTranslating ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>جاري الترجمة...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                        <span>⚡ ترجمة فورية (EN / FR)</span>
-                      </>
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowTranslations(!showTranslations)}
-                    className="text-xs text-purple-700 hover:underline font-bold inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    <Languages className="w-3 h-3" />
-                    <span>{showTranslations ? 'إخفاء اللغات' : 'عرض اللغات'}</span>
-                  </button>
-                </div>
+                <label className="block text-sm font-bold text-gray-700">
+                  اسم المنتج بالعربية <span className="text-rose-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowTranslations(!showTranslations)}
+                  className="text-xs text-indigo-700 hover:text-indigo-900 font-bold inline-flex items-center gap-1 cursor-pointer"
+                >
+                  <Languages className="w-3.5 h-3.5" />
+                  <span>{showTranslations ? 'إخفاء حقول اللغات' : 'عرض حقول الترجمة اليدوية (EN / FR)'}</span>
+                </button>
               </div>
               <input
                 type="text"
@@ -288,15 +243,17 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
               />
             </div>
 
-            {transSuccess && (
-              <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-bold flex items-center gap-2 animate-in fade-in">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>تمت ترجمة الاسم والوصف فورياً إلى الإنجليزية والفرنسية بنجاح!</span>
-              </div>
-            )}
-
             {showTranslations && (
-              <div className="p-3.5 bg-purple-50/50 border border-purple-100 rounded-xl space-y-3 animate-in fade-in">
+              <div className="p-3.5 bg-indigo-50/40 border border-indigo-100 rounded-xl space-y-3 animate-in fade-in">
+                <div className="text-xs font-bold text-indigo-950 flex items-center justify-between border-b border-indigo-100 pb-2">
+                  <div className="flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>الترجمة اليدوية للاسم والوصف (Manual Translations)</span>
+                  </div>
+                  <span className="text-[10px] text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md font-mono">
+                    Manual
+                  </span>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1">

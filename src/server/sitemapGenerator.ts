@@ -37,7 +37,7 @@ async function fetchAllProductIds(): Promise<ProductIdAndDate[]> {
   }
 }
 
-// دالة لتوليد XML لخريطة الموقع بالكامل بشكل ديناميكي
+// دالة لتوليد XML لخريطة الموقع بالكامل باللغات الثلاث لـ Googlebot وفق معايير Google Search Central
 export async function generateSitemapXml(baseUrl: string): Promise<string> {
   const today = new Date().toISOString().split('T')[0];
   const products = await fetchAllProductIds();
@@ -50,52 +50,71 @@ export async function generateSitemapXml(baseUrl: string): Promise<string> {
     { path: '/accessories', priority: '0.8', changefreq: 'weekly' },
   ];
 
-  const langs = ['ar', 'en', 'fr'];
+  const langs: ('ar' | 'en' | 'fr')[] = ['ar', 'en', 'fr'];
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`;
+  xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n`;
+  xml += `        xmlns:xhtml="http://www.w3.org/1999/xhtml">\n`;
 
-  // Helper to generate hreflang links
-  const getHreflangTags = (basePath: string) => {
-    let tags = '';
-    tags += `    <xhtml:link rel="alternate" hreflang="ar" href="${baseUrl}${basePath}" />\n`;
-    tags += `    <xhtml:link rel="alternate" hreflang="en" href="${baseUrl}/en${basePath === '/' ? '' : basePath}" />\n`;
-    tags += `    <xhtml:link rel="alternate" hreflang="fr" href="${baseUrl}/fr${basePath === '/' ? '' : basePath}" />\n`;
-    tags += `    <xhtml:link rel="alternate" hreflang="x-default" href="${baseUrl}${basePath}" />\n`;
-    return tags;
-  };
-
-  // 1. إضافة الصفحات الرئيسية بجميع اللغات
+  // 1. إضافة الصفحات الرئيسية والأقسام باللغات الثلاث مع وسوم xhtml:link
   for (const route of staticRoutes) {
-    const basePath = route.path || '/';
-    for (const lang of langs) {
-      const pathPrefix = lang === 'ar' ? '' : `/${lang}`;
-      const fullPath = basePath === '/' ? pathPrefix || '/' : `${pathPrefix}${basePath}`;
-      
+    const rawUrl = `${baseUrl}${route.path}`;
+
+    // رابط الصفحة الافتراضي
+    xml += `  <url>\n`;
+    xml += `    <loc>${rawUrl}</loc>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="ar" href="${rawUrl}?lang=ar"/>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="en" href="${rawUrl}?lang=en"/>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="fr" href="${rawUrl}?lang=fr"/>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${rawUrl}"/>\n`;
+    xml += `    <lastmod>${today}</lastmod>\n`;
+    xml += `    <changefreq>${route.changefreq}</changefreq>\n`;
+    xml += `    <priority>${route.priority}</priority>\n`;
+    xml += `  </url>\n`;
+
+    // روابط اللغات الثلاث المباشرة حتى يزحف إليها قوقل بشكل صريح
+    for (const l of langs) {
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}${fullPath === '//' ? '/' : fullPath}</loc>\n`;
+      xml += `    <loc>${rawUrl}?lang=${l}</loc>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="ar" href="${rawUrl}?lang=ar"/>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="en" href="${rawUrl}?lang=en"/>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="fr" href="${rawUrl}?lang=fr"/>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${rawUrl}"/>\n`;
       xml += `    <lastmod>${today}</lastmod>\n`;
       xml += `    <changefreq>${route.changefreq}</changefreq>\n`;
-      xml += `    <priority>${route.priority}</priority>\n`;
-      xml += getHreflangTags(basePath === '/' ? '' : basePath);
+      xml += `    <priority>${(Number(route.priority) - 0.1).toFixed(1)}</priority>\n`;
       xml += `  </url>\n`;
     }
   }
 
-  // 2. إضافة روابط كل المنتجات الموجودة في قاعدة البيانات تلقائياً
+  // 2. إضافة روابط كل المنتجات الموجودة في قاعدة البيانات باللغات الثلاث
   for (const prod of products) {
-    const basePath = `/product/${prod.id}`;
-    for (const lang of langs) {
-      const pathPrefix = lang === 'ar' ? '' : `/${lang}`;
-      
+    const prodUrl = `${baseUrl}/product/${prod.id}`;
+    const lastmod = prod.updatedAt || today;
+
+    // الرابط الأساسي للمنتج
+    xml += `  <url>\n`;
+    xml += `    <loc>${prodUrl}</loc>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="ar" href="${prodUrl}?lang=ar"/>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="en" href="${prodUrl}?lang=en"/>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="fr" href="${prodUrl}?lang=fr"/>\n`;
+    xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${prodUrl}"/>\n`;
+    xml += `    <lastmod>${lastmod}</lastmod>\n`;
+    xml += `    <changefreq>weekly</changefreq>\n`;
+    xml += `    <priority>0.8</priority>\n`;
+    xml += `  </url>\n`;
+
+    // روابط المنتجات المباشرة لكل لغة (AR, EN, FR)
+    for (const l of langs) {
       xml += `  <url>\n`;
-      xml += `    <loc>${baseUrl}${pathPrefix}${basePath}</loc>\n`;
-      if (prod.updatedAt) {
-        xml += `    <lastmod>${prod.updatedAt}</lastmod>\n`;
-      }
+      xml += `    <loc>${prodUrl}?lang=${l}</loc>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="ar" href="${prodUrl}?lang=ar"/>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="en" href="${prodUrl}?lang=en"/>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="fr" href="${prodUrl}?lang=fr"/>\n`;
+      xml += `    <xhtml:link rel="alternate" hreflang="x-default" href="${prodUrl}"/>\n`;
+      xml += `    <lastmod>${lastmod}</lastmod>\n`;
       xml += `    <changefreq>weekly</changefreq>\n`;
       xml += `    <priority>0.8</priority>\n`;
-      xml += getHreflangTags(basePath);
       xml += `  </url>\n`;
     }
   }

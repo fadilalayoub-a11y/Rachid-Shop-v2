@@ -126,10 +126,8 @@ export function LanguageSwitcher({ className = '', dropDirection = 'down' }: Lan
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setIsOpen(false);
-                    // Switch language via React context — preserves all page state and form data.
-                    // No page reload needed; the LanguageContext persists the choice in localStorage.
                     setLanguage(lang.code);
+                    setIsOpen(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-start transition-all cursor-pointer ${
                     isSelected
