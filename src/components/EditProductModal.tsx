@@ -76,7 +76,8 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
         setInventory([{ size: '', stock: '' }]);
       }
     }
-  }, [product]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
 
   if (!isOpen || !product) return null;
 

@@ -126,29 +126,10 @@ export function LanguageSwitcher({ className = '', dropDirection = 'down' }: Lan
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Generate new path based on language
-                    let currentPath = window.location.pathname;
-                    // Remove existing language prefix if any
-                    if (currentPath.startsWith('/en')) {
-                      currentPath = currentPath.replace(/^\/en(\/|$)/, '/');
-                    } else if (currentPath.startsWith('/fr')) {
-                      currentPath = currentPath.replace(/^\/fr(\/|$)/, '/');
-                    }
-                    
-                    let newPath = currentPath;
-                    if (lang.code === 'en') {
-                      newPath = '/en' + (currentPath === '/' ? '' : currentPath);
-                    } else if (lang.code === 'fr') {
-                      newPath = '/fr' + (currentPath === '/' ? '' : currentPath);
-                    }
-                    
                     setIsOpen(false);
-                    // Use window.location.href to fully trigger a reload for SSR to pick it up properly,
-                    // or just use navigate from react-router-dom if we import it.
-                    // Actually, a full reload is safer to ensure seoPrerender grabs correct SSR HTML,
-                    // but react-router navigation is smoother. Let's use window.location.assign for clean SSR sync.
-                    if (newPath === '') newPath = '/';
-                    window.location.assign(newPath);
+                    // Switch language via React context — preserves all page state and form data.
+                    // No page reload needed; the LanguageContext persists the choice in localStorage.
+                    setLanguage(lang.code);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs text-start transition-all cursor-pointer ${
                     isSelected
