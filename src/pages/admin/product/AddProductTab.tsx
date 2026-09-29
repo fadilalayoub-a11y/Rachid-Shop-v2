@@ -14,7 +14,6 @@ import {
   Tag,
   Globe
 } from 'lucide-react';
-import { ProductStyle } from '../../../types';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import { classifyProduct, ProductClassification } from '../../../utils/productClassifier';
@@ -32,15 +31,6 @@ const PRODUCT_CATEGORIES: { id: 'shoes' | 'clothes' | 'accessories'; nameAr: str
   { id: 'accessories', nameAr: 'إكسسوارات', nameEn: 'Accessories', icon: '🕶️' },
 ];
 
-// 2. ستايل المنتج فقط (5 أنماط رئيسية)
-const STYLE_OPTIONS: { id: ProductStyle; nameAr: string; nameEn: string; desc: string; icon: string }[] = [
-  { id: 'old_money', nameAr: 'أولد ماني', nameEn: 'Old Money', desc: 'أناقة كلاسيكية هادئة وفاخرة', icon: '👑' },
-  { id: 'classic', nameAr: 'كلاسيك', nameEn: 'Classic', desc: 'رسمي وأنيق لجميع المناسبات', icon: '👔' },
-  { id: 'streetwear', nameAr: 'ستريت وير', nameEn: 'Streetwear', desc: 'طابع شبابي عصري وأوفر سايز', icon: '🔥' },
-  { id: 'sportswear', nameAr: 'سبورتس وير', nameEn: 'Sportswear', desc: 'ملابس وأحذية رياضية عملية', icon: '⚡' },
-  { id: 'casual', nameAr: 'كاجوال', nameEn: 'Casual', desc: 'إطلالة يومية مريحة وعملية', icon: '👖' },
-];
-
 // مقاسات مقترحة حسب نوع المنتج
 const PRESET_SIZES = {
   shoes: ['39', '40', '41', '42', '43', '44', '45'],
@@ -49,11 +39,10 @@ const PRESET_SIZES = {
 };
 
 export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabProps) {
-  // 1. أولاً وثانياً: نوع المنتج وتصنيفه الفرعي (إجباري للدقة)
+  // 1. أولاً وثانياً: نوع المنتج وتصنيفه الفرعي في نفس السطر (إجباري للدقة)
   const [category, setCategory] = useState<'shoes' | 'clothes' | 'accessories'>('shoes');
   const [subcategory, setSubcategory] = useState<string>('sneakers');
   const [isManualSelection, setIsManualSelection] = useState(false);
-  const [style, setStyle] = useState<ProductStyle>('old_money');
 
   // قائمة الأقسام الفرعية التابعة لنوع المنتج المختار حالياً
   const currentSubcategories = useMemo(() => {
@@ -121,11 +110,8 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
           setSubcategory(subcats[0].id);
         }
       }
-      if (detectedClassification.suggestedStyle && style === 'old_money') {
-        setStyle(detectedClassification.suggestedStyle);
-      }
     }
-  }, [detectedClassification.category, detectedClassification.subcategory, detectedClassification.suggestedStyle, isManualSelection]);
+  }, [detectedClassification.category, detectedClassification.subcategory, isManualSelection]);
 
   // تحديث المقاسات المقترحة وتصنيف الفئة عند تغيير نوع المنتج
   const handleCategoryChange = (newCat: 'clothes' | 'shoes' | 'accessories') => {
@@ -354,12 +340,12 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
         compare_at_price: originalPrice ? parseFloat(originalPrice) : null,
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
 
-        // الأقسام والستايل (تم تحديدها أولاً وبشكل إجباري لدقة التصنيف)
+        // الأقسام (تم تحديدها بشكل صريح في نفس السطر لدقة التصنيف)
         category: category,
         category_id: category,
         subcategory: subcategory,
         subcategory_id: subcategory,
-        style: style || detectedClassification.suggestedStyle || 'casual',
+        style: detectedClassification.suggestedStyle || 'casual',
 
         // القياس والمخزون
         inventory: inventoryList,
@@ -482,148 +468,82 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* الخطوة 1: أولاً - نوع المنتج الرئيسي (إجباري) */}
-        <div className="bg-white p-5 rounded-2xl border-2 border-stone-900 shadow-sm space-y-4">
+        {/* 1. نوع وتصنيف المنتج في نفس السطر (إجباري) */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-stone-100 pb-3 flex-wrap gap-2">
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-stone-950 text-white flex items-center justify-center text-xs font-black">1</span>
-              <h3 className="text-sm font-black text-stone-950">أولاً: نوع المنتج (Product Type)</h3>
-              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">
-                * طلب ضروري وإجباري
+              <h3 className="text-sm font-black text-stone-950">نوع وتصنيف المنتج (Product Type & Subcategory)</h3>
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                * إجباري لتصنيف دقيق
               </span>
             </div>
-            <span className="text-xs text-stone-500 font-medium">القسم العام للمنتج</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {PRODUCT_CATEGORIES.map((cat) => {
-              const isSelected = category === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => handleCategoryChange(cat.id)}
-                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 text-right ${
-                    isSelected
-                      ? 'border-stone-950 bg-stone-950 text-white shadow-md ring-2 ring-stone-950/20'
-                      : 'border-stone-200 hover:border-stone-400 bg-stone-50/50 text-stone-800'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{cat.icon}</span>
-                    <div>
-                      <p className="text-sm font-black">{cat.nameAr}</p>
-                      <p className={`text-[11px] font-medium ${isSelected ? 'text-stone-300' : 'text-stone-500'}`}>
-                        {cat.nameEn}
-                      </p>
-                    </div>
-                  </div>
-                  {isSelected && (
-                    <span className="w-5 h-5 rounded-full bg-white text-stone-950 flex items-center justify-center text-xs font-black">
-                      ✓
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* الخطوة 2: ثانياً - تصنيفات الحذاء أو الملابس أو الإكسسوارات (إجباري للدقة) */}
-        <div className="bg-white p-5 rounded-2xl border-2 border-stone-800 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-stone-100 pb-3 flex-wrap gap-2">
-            <div className="flex items-center gap-2.5">
-              <span className="w-6 h-6 rounded-full bg-stone-950 text-white flex items-center justify-center text-xs font-black">2</span>
-              <h3 className="text-sm font-black text-stone-950">
-                ثانياً: {category === 'shoes' ? 'تصنيفات الحذاء (Shoe Classification)' : category === 'clothes' ? 'تصنيفات الملابس (Clothing Classification)' : 'تصنيفات الإكسسوارات'}
-              </h3>
-              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">
-                * طلب ضروري لتصنيف دقيق
-              </span>
-            </div>
-            <span className="text-xs text-stone-700 bg-stone-100 px-2.5 py-1 rounded-lg font-bold">
-              {category === 'shoes' ? '👟 اختر موديل ونوع الحذاء المطلوب بدقة' : 'اختر القسم التفصيلي بدقة'}
+            <span className="text-xs text-stone-500 font-medium">
+              تحديد فوري في نفس السطر
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-            {currentSubcategories.map((sub) => {
-              const isSelected = subcategory === sub.id;
-              return (
-                <button
-                  key={sub.id}
-                  type="button"
-                  onClick={() => {
-                    setIsManualSelection(true);
-                    setSubcategory(sub.id);
-                  }}
-                  className={`p-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                    isSelected
-                      ? 'border-stone-950 bg-stone-900 text-white font-black shadow-sm ring-2 ring-stone-950/20'
-                      : 'border-stone-200 hover:border-stone-400 bg-white text-stone-800 font-medium'
-                  }`}
-                >
-                  <span className="text-xs font-bold leading-tight">{sub.nameAr}</span>
-                  <span className={`text-[10px] font-mono ${isSelected ? 'text-stone-300' : 'text-stone-400'}`}>
-                    {sub.nameEn}
-                  </span>
-                  {isSelected && (
-                    <span className="text-[10px] font-bold text-amber-300 mt-0.5">✓ تم الاختيار</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* الخطوة 3: ثالثاً - ستايل ونمط الموضة */}
-        <div className="bg-white p-5 rounded-2xl border border-stone-200/80 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between border-b border-stone-100 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-stone-200 text-stone-800 flex items-center justify-center text-xs font-bold">3</span>
-              <h3 className="text-sm font-bold text-stone-900">ثالثاً: ستايل المظهر (Fashion Style)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* نوع المنتج */}
+            <div>
+              <label className="block text-xs font-bold text-stone-800 mb-1.5">
+                نوع المنتج (Product Type) <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {PRODUCT_CATEGORIES.map((cat) => {
+                  const isSelected = category === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => handleCategoryChange(cat.id)}
+                      className={`px-3 py-2.5 rounded-xl border-2 text-xs font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        isSelected
+                          ? 'border-stone-950 bg-stone-950 text-white shadow-xs'
+                          : 'border-stone-200 hover:border-stone-400 bg-stone-50/40 text-stone-800'
+                      }`}
+                    >
+                      <span className="text-base">{cat.icon}</span>
+                      <span>{cat.nameAr}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <span className="text-xs text-stone-500">لربط المنتج بأقسام المتجر</span>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
-            {STYLE_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={() => setStyle(opt.id)}
-                className={`p-3 rounded-xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
-                  style === opt.id
-                    ? 'border-stone-950 bg-stone-950 text-white shadow-xs'
-                    : 'border-stone-200 hover:border-stone-300 bg-white text-stone-800'
-                }`}
+            {/* تصنيف النوع في نفس السطر */}
+            <div>
+              <label className="block text-xs font-bold text-stone-800 mb-1.5">
+                {category === 'shoes'
+                  ? 'تصنيف الحذاء (Shoe Classification)'
+                  : category === 'clothes'
+                  ? 'تصنيف الملابس (Clothing Classification)'
+                  : 'تصنيف الإكسسوارات (Subcategory)'} <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={subcategory}
+                onChange={(e) => {
+                  setIsManualSelection(true);
+                  setSubcategory(e.target.value);
+                }}
+                className="w-full px-3.5 py-2 text-xs border-2 border-stone-800 rounded-xl focus:ring-2 focus:ring-stone-950 font-bold bg-white text-stone-900 cursor-pointer h-[42px]"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-base">{opt.icon}</span>
-                    {style === opt.id && (
-                      <span className="w-2 h-2 rounded-full bg-amber-400" />
-                    )}
-                  </div>
-                  <p className="text-xs font-bold">{opt.nameAr}</p>
-                  <p className={`text-[10px] font-mono ${style === opt.id ? 'text-stone-300' : 'text-stone-400'}`} dir="ltr">
-                    {opt.nameEn}
-                  </p>
-                </div>
-                <p className={`text-[10px] mt-2 leading-tight ${style === opt.id ? 'text-stone-300' : 'text-stone-500'}`}>
-                  {opt.desc}
-                </p>
-              </button>
-            ))}
+                {currentSubcategories.map((sub) => (
+                  <option key={sub.id} value={sub.id}>
+                    {sub.nameAr} ({sub.nameEn})
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
-        {/* 4. الإسم والوصف والكلمات المفتاحية باللغات الثلاث */}
+        {/* 2. الإسم والوصف والكلمات المفتاحية باللغات الثلاث */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-indigo-600" />
-              <h3 className="text-sm font-bold text-gray-900">رابعاً: الإسم، الوصف، والكلمات المفتاحية (3 لغات)</h3>
+              <h3 className="text-sm font-bold text-gray-900">2. الإسم، الوصف، والكلمات المفتاحية (3 لغات)</h3>
             </div>
 
             {/* أزرار التبديل السريع بين اللغات */}
@@ -814,11 +734,11 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
           )}
         </div>
 
-        {/* 5. السعر */}
+        {/* 3. السعر */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
             <Tag className="w-4 h-4 text-emerald-600" />
-            <h3 className="text-sm font-bold text-gray-900">خامساً: السعر (Price)</h3>
+            <h3 className="text-sm font-bold text-gray-900">3. السعر (Price)</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -853,12 +773,12 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
           </div>
         </div>
 
-        {/* 6. القياس والمخزون */}
+        {/* 4. القياس والمخزون */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-blue-600" />
-              <h3 className="text-sm font-bold text-gray-900">سادساً: القياس والمخزون (Sizes & Stock)</h3>
+              <h3 className="text-sm font-bold text-gray-900">4. القياس والمخزون (Sizes & Stock)</h3>
             </div>
             <div className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg">
               إجمالي القطع المتوفرة: {totalCalculatedStock}
@@ -958,12 +878,12 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
           </div>
         </div>
 
-        {/* 7. الصور */}
+        {/* 5. الصور */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div className="flex items-center gap-2">
               <UploadCloud className="w-4 h-4 text-blue-600" />
-              <h3 className="text-sm font-bold text-gray-900">سابعاً: صور المنتج (Product Images)</h3>
+              <h3 className="text-sm font-bold text-gray-900">5. صور المنتج (Product Images)</h3>
             </div>
             <span className="text-xs text-gray-400 font-bold">
               {imageFiles.length + imageUrls.length} صور محددة
