@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { db } from '../lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
+import { Product } from '../types';
 
 // استيراد الصور الافتراضية
 import prevJeansImg from '../assets/images/cat_jeans_editorial_1790338015205.jpg';
@@ -138,9 +139,40 @@ export const DEFAULT_CATEGORIES_DATA: CategoryCard[] = [
   },
 ];
 
-export function ShopByCategories() {
+export interface ShopByCategoriesProps {
+  products?: Product[];
+}
+
+export function ShopByCategories({ products = [] }: ShopByCategoriesProps) {
   const { language, isRTL } = useLanguage();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Helper to calculate product count per category
+  const getCategoryItemCount = (item: CategoryCard): number => {
+    if (!products || products.length === 0) return 0;
+    const matching = products.filter((p) => {
+      if (p.subcategory_id === item.id || p.subcategory === item.id) return true;
+      const corpus = `${p.name || ''} ${p.category || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      if (item.id === 't-shirts' && (corpus.includes('shirt') || corpus.includes('تيشيرت') || corpus.includes('قميص'))) return true;
+      if (item.id === 'hoodies' && (corpus.includes('hoodie') || corpus.includes('هودي') || corpus.includes('سويت'))) return true;
+      if (item.id === 'jackets' && (corpus.includes('jacket') || corpus.includes('جاكيت') || corpus.includes('معطف'))) return true;
+      if (item.id === 'jeans' && (corpus.includes('jean') || corpus.includes('جينز'))) return true;
+      if (item.id === 'sweatpants' && (corpus.includes('pant') || corpus.includes('سروال') || corpus.includes('كيطمة'))) return true;
+      if (item.id === 'sneakers' && (corpus.includes('sneaker') || corpus.includes('سنيكرز') || p.category === 'shoes')) return true;
+      if (item.id === 'formal-shoes' && (corpus.includes('classic') || corpus.includes('كلاسيك') || corpus.includes('حذاء'))) return true;
+      if (item.id === 'running-shoes' && (corpus.includes('sport') || corpus.includes('رياضي') || p.category === 'shoes')) return true;
+      if (item.id === 'sandals' && (corpus.includes('sandal') || corpus.includes('صندل') || corpus.includes('كلاكيت'))) return true;
+      if (item.id === 'watches-perfumes' && (corpus.includes('watch') || corpus.includes('ساعة') || corpus.includes('عطر') || p.category === 'accessories')) return true;
+      if (item.id === 'sunglasses' && (corpus.includes('sunglass') || corpus.includes('نظار'))) return true;
+      if (item.id === 'caps' && (corpus.includes('cap') || corpus.includes('قبعة'))) return true;
+
+      if (item.link.includes('shoes') && p.category === 'shoes') return true;
+      if (item.link.includes('clothes') && p.category === 'clothes') return true;
+      if (item.link.includes('accessories') && p.category === 'accessories') return true;
+      return false;
+    });
+    return matching.length;
+  };
   const [customImages, setCustomImages] = useState<Record<string, string>>(() => {
     try {
       const saved = localStorage.getItem(CATEGORIES_STORAGE_KEY);
@@ -292,11 +324,18 @@ export function ShopByCategories() {
                     {/* Subtle hover shade */}
                     <div className="absolute inset-0 bg-black/5 group-hover:bg-black/15 transition-colors duration-300" />
 
-                    {/* Overlaid clean white rectangular badge containing category title in uppercase dark sans-serif text */}
+                    {/* Overlaid clean white rectangular badge containing category title and available items count */}
                     <div className="absolute bottom-5 inset-x-0 flex justify-center px-3 z-10">
-                      <div className="bg-white px-5 py-2.5 shadow-sm text-center min-w-[130px] max-w-[90%] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md">
-                        <span className="block text-xs sm:text-sm font-bold text-stone-900 tracking-wider uppercase font-sans">
+                      <div className="bg-white/95 backdrop-blur-xs px-4 py-2 shadow-sm text-center min-w-[130px] max-w-[90%] transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md rounded-xl border border-stone-200/60">
+                        <span className="block text-xs sm:text-sm font-black text-stone-900 tracking-wider uppercase font-sans">
                           {displayName}
+                        </span>
+                        <span className="block text-[10px] font-bold text-amber-700 mt-0.5 font-mono">
+                          {language === 'ar' 
+                            ? `${getCategoryItemCount(item)} قطعة متوفرة` 
+                            : language === 'fr' 
+                              ? `${getCategoryItemCount(item)} articles` 
+                              : `${getCategoryItemCount(item)} items`}
                         </span>
                       </div>
                     </div>

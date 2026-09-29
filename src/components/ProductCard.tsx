@@ -3,6 +3,7 @@ import { Product } from '../types';
 import { normalizeProductImageUrl } from '../utils/image';
 import { useLanguage } from '../context/LanguageContext';
 import { getLocalizedProductName } from '../utils/productLocalization';
+import { generateProductSlug } from '../utils/slugify';
 import { ArrowUpLeft, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface ProductCardProps {
@@ -26,9 +27,11 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
     ? product.secondaryImage
     : (product.images && product.images.length > 1 && product.images[1] && product.images[1].trim() !== '' ? product.images[1] : null);
 
+  const productSlug = generateProductSlug(product);
+
   return (
     <Link 
-      to={`/product/${product.id}`}
+      to={`/product/${productSlug}`}
       onClick={(e) => {
         // استخدام onSelect للتنقل السلس دون وميض
         if (!e.metaKey && !e.ctrlKey && !e.shiftKey) {
@@ -123,7 +126,9 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
 
           {/* رابط الإجراء الأنيق: View Details → */}
           <div className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-bold text-stone-600 group-hover:text-stone-950 transition-all duration-200">
-            <span className="hidden xs:inline">{language === 'ar' ? 'التفاصيل' : 'View Details'}</span>
+            <span className="hidden xs:inline">
+              {language === 'ar' ? 'التفاصيل' : language === 'fr' ? 'Détails' : 'View Details'}
+            </span>
             {isRTL ? (
               <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-1" />
             ) : (

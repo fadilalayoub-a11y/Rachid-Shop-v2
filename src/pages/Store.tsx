@@ -20,6 +20,7 @@ import { TrustGuarantees } from '../components/TrustGuarantees';
 import { Footer } from '../components/Footer';
 import { LIFESTYLE_COLLECTIONS, isProductInCollection } from '../utils/collections';
 import { autoTranslateProductsForLanguage, subscribeToTranslationUpdates } from '../utils/productLocalization';
+import { generateProductSlug, cleanSlug } from '../utils/slugify';
 
 interface StoreProps {
   initialTab?: 'home' | 'clothes' | 'shoes' | 'accessories';
@@ -122,10 +123,12 @@ export function Store({ initialTab }: StoreProps) {
     }
   };
 
-  // دالة اختيار المنتج مع تحديث رابط المتصفح إلى /product/:id
+  // دالة اختيار المنتج مع تحديث رابط المتصفح ليتضمن اسم المنتج (Slug)
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product);
-    navigate(`/product/${product.id}`, { replace: false });
+    // توليد الـ slug المشتق مباشرة من اسم المنتج
+    const slug = generateProductSlug(product);
+    navigate(`/product/${slug}`, { replace: false });
   };
 
   // دالة إغلاق نافذة تفاصيل المنتج والعودة للرابط المناسب
@@ -209,8 +212,14 @@ export function Store({ initialTab }: StoreProps) {
   // فتح المنتج تلقائياً عند الدخول برابط مباشر ومزامنة البيانات الحية
   useEffect(() => {
     if (productId) {
+      const decodedParam = decodeURIComponent(productId);
       if (products.length > 0) {
-        const found = products.find(p => p.id === productId);
+        const found = products.find(p => {
+          if (p.id === productId || p.id === decodedParam) return true;
+          if (p.slug && (p.slug === productId || p.slug === decodedParam)) return true;
+          const generated = generateProductSlug(p);
+          return generated === productId || generated === decodedParam;
+        });
         if (found) {
           setSelectedProduct(prev => {
             if (prev && prev.id === found.id) {
@@ -443,26 +452,26 @@ export function Store({ initialTab }: StoreProps) {
     }
     if (activeTab === 'clothes') {
       return [
-        { id: 'jeans', nameAr: 'بناطيل جينز', nameEn: 'Jeans' },
-        { id: 'trackpants', nameAr: 'كيطمة وبناطيل رياضية', nameEn: 'Trackpants' },
-        { id: 'shirt', nameAr: 'قمصان', nameEn: 'Shirts' },
-        { id: 'jacket', nameAr: 'جواكت وهوديز', nameEn: 'Jackets & Hoodies' },
-        { id: 'shorts', nameAr: 'شورتات', nameEn: 'Shorts' },
+        { id: 'jeans', nameAr: 'بناطيل جينز', nameEn: 'Jeans', nameFr: 'Pantalons Jeans' },
+        { id: 'trackpants', nameAr: 'كيطمة وبناطيل رياضية', nameEn: 'Trackpants', nameFr: 'Survêtements & Joggers' },
+        { id: 'shirt', nameAr: 'قمصان', nameEn: 'Shirts', nameFr: 'Chemises & Polos' },
+        { id: 'jacket', nameAr: 'جواكت وهوديز', nameEn: 'Jackets & Hoodies', nameFr: 'Vestes & Hoodies' },
+        { id: 'shorts', nameAr: 'شورتات', nameEn: 'Shorts', nameFr: 'Shorts & Bermudas' },
       ];
     }
     if (activeTab === 'shoes') {
       return [
-        { id: 'sneakers', nameAr: 'سنيكرز وأحذية رياضية', nameEn: 'Sneakers' },
-        { id: 'casual-shoe', nameAr: 'أحذية كاجوال وجلدية', nameEn: 'Casual Shoes' },
-        { id: 'slides', nameAr: 'كلاكيط وصنادل', nameEn: 'Slides & Sandals' },
+        { id: 'sneakers', nameAr: 'سنيكرز وأحذية رياضية', nameEn: 'Sneakers', nameFr: 'Sneakers & Baskets' },
+        { id: 'casual-shoe', nameAr: 'أحذية كاجوال وجلدية', nameEn: 'Casual Shoes', nameFr: 'Chaussures de Ville & Cuir' },
+        { id: 'slides', nameAr: 'كلاكيط وصنادل', nameEn: 'Slides & Sandals', nameFr: 'Sandales & Claquettes' },
       ];
     }
     if (activeTab === 'accessories') {
       return [
-        { id: 'watch', nameAr: 'ساعات يد', nameEn: 'Watches' },
-        { id: 'perfume', nameAr: 'عطور', nameEn: 'Perfumes' },
-        { id: 'sunglasses', nameAr: 'نظارات شمسية', nameEn: 'Sunglasses' },
-        { id: 'caps', nameAr: 'قبعات', nameEn: 'Caps' },
+        { id: 'watch', nameAr: 'ساعات يد', nameEn: 'Watches', nameFr: 'Montres' },
+        { id: 'perfume', nameAr: 'عطور', nameEn: 'Perfumes', nameFr: 'Parfums' },
+        { id: 'sunglasses', nameAr: 'نظارات شمسية', nameEn: 'Sunglasses', nameFr: 'Lunettes de Soleil' },
+        { id: 'caps', nameAr: 'قبعات', nameEn: 'Caps', nameFr: 'Casquettes' },
       ];
     }
     return [];
@@ -543,19 +552,23 @@ export function Store({ initialTab }: StoreProps) {
   // العناوين الديناميكية
   const pageTitle = useMemo(() => {
     if (activeCollection) {
-      return language === 'ar' ? activeCollection.nameAr : activeCollection.nameEn;
+      if (language === 'ar') return activeCollection.nameAr;
+      if (language === 'fr') return activeCollection.nameFr || activeCollection.nameEn;
+      return activeCollection.nameEn;
     }
     switch (activeTab) {
-      case 'clothes': return t.navClothes;
-      case 'shoes': return t.navShoes;
-      case 'accessories': return t.navAccessories;
+      case 'clothes': return t.clothesTitle;
+      case 'shoes': return t.shoesTitle;
+      case 'accessories': return t.accessoriesTitle;
       default: return t.navHome;
     }
   }, [activeCollection, activeTab, language, t]);
 
   const pageSubtitle = useMemo(() => {
     if (activeCollection) {
-      return language === 'ar' ? activeCollection.subtitleAr : activeCollection.subtitleEn;
+      if (language === 'ar') return activeCollection.subtitleAr;
+      if (language === 'fr') return activeCollection.subtitleFr || activeCollection.subtitleEn;
+      return activeCollection.subtitleEn;
     }
     return t.curatedCollectionSubtitle;
   }, [activeCollection, language, t]);
@@ -719,7 +732,7 @@ export function Store({ initialTab }: StoreProps) {
                       {activeCollection && (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-stone-100 text-stone-700 text-xs font-bold border border-stone-200">
                           <Sparkles className="w-3 h-3 text-amber-600" />
-                          <span>{language === 'ar' ? 'مجموعة منتقاة' : 'Curated Drop'}</span>
+                          <span>{t.curatedCollectionBadge}</span>
                         </span>
                       )}
                     </h1>
@@ -730,7 +743,7 @@ export function Store({ initialTab }: StoreProps) {
 
                   <div className="flex items-center gap-2 text-xs font-bold text-stone-600 bg-stone-50 px-3.5 py-2 rounded-xl border border-stone-200 self-start md:self-auto shrink-0">
                     <Layers className="w-4 h-4 text-stone-500" />
-                    <span>{language === 'ar' ? `${filteredProducts.length} قطعة متوفرة` : `${filteredProducts.length} items`}</span>
+                    <span>{t.itemsAvailableCount(filteredProducts.length)}</span>
                   </div>
                 </div>
               </div>
@@ -751,16 +764,16 @@ export function Store({ initialTab }: StoreProps) {
                     <Tag className="w-6 h-6" />
                   </div>
                   <h3 className="text-base font-black text-stone-950">
-                    {language === 'ar' ? 'لا توجد قطع متوفرة بهذا المقاس أو الفلتر' : 'No items match your selected filters'}
+                    {t.noMatchingFilterItemsTitle}
                   </h3>
                   <p className="text-xs text-stone-500 mt-1 mb-5">
-                    {language === 'ar' ? 'جرب اختيار مقاس آخر أو إلغاء بعض الفلاتر لعرض باقي القطع' : 'Try selecting a different size or clear your filters'}
+                    {t.noMatchingFilterItemsDesc}
                   </p>
                   <button
                     onClick={() => setFilterState({ size: null, categoryType: null, brand: null, priceRange: null, inStockOnly: true })}
                     className="px-5 py-2.5 rounded-xl bg-stone-950 text-white text-xs font-bold hover:bg-stone-800 transition-colors cursor-pointer shadow-sm"
                   >
-                    {language === 'ar' ? 'إعادة ضبط كل الفلاتر' : 'Reset Filters'}
+                    {t.resetAllFiltersBtn}
                   </button>
                 </div>
               ) : (

@@ -14,7 +14,7 @@ export interface CollectionDefinition {
   targetAudienceAr: string;
   seoDescriptionAr: string;
   seoDescriptionEn: string;
-  categoryTypes: { id: string; nameAr: string; nameEn: string }[];
+  categoryTypes: { id: string; nameAr: string; nameEn: string; nameFr?: string }[];
   keywords: string[];
 }
 
@@ -34,10 +34,10 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
     seoDescriptionAr: 'تسوق تشكيلة جينز وكاجوال الفاخرة للرجال من متجر رشيد. بناطيل دينيم، جواكت كاجوال وأحذية يومية بجودة عالية.',
     seoDescriptionEn: 'Shop Denim & Casual collection at Rachid Shop. Men\'s jeans, casual jackets, everyday shirts and casual footwear.',
     categoryTypes: [
-      { id: 'jeans', nameAr: 'جينز', nameEn: 'Jeans' },
-      { id: 'jacket', nameAr: 'جواكت كاجوال', nameEn: 'Jackets' },
-      { id: 'shirt', nameAr: 'قمصان يومية', nameEn: 'Shirts' },
-      { id: 'casual-shoe', nameAr: 'أحذية كاجوال', nameEn: 'Casual Shoes' },
+      { id: 'jeans', nameAr: 'جينز', nameEn: 'Jeans', nameFr: 'Jeans' },
+      { id: 'jacket', nameAr: 'جواكت كاجوال', nameEn: 'Jackets', nameFr: 'Vestes' },
+      { id: 'shirt', nameAr: 'قمصان يومية', nameEn: 'Shirts', nameFr: 'Chemises' },
+      { id: 'casual-shoe', nameAr: 'أحذية كاجوال', nameEn: 'Casual Shoes', nameFr: 'Chaussures Décontractées' },
     ],
     keywords: [
       'جينز', 'دينيم', 'denim', 'jean', 'jeans',
@@ -61,11 +61,11 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
     seoDescriptionAr: 'أفضل تشكيلة ملابس رياضية وجيم للرجال: كيطمات مريحة، هوديز قطنية وأحذية جري وسنيكرز حصرية.',
     seoDescriptionEn: 'Explore men\'s sportswear and gym essentials: trackpants, workout shorts, hoodies and performance sneakers.',
     categoryTypes: [
-      { id: 'trackpants', nameAr: 'كيطمة وبناطيل رياضية', nameEn: 'Trackpants' },
-      { id: 'athletic-shorts', nameAr: 'شورتات تمرين', nameEn: 'Athletic Shorts' },
-      { id: 'hoodies', nameAr: 'هوديز وسويت شيرت', nameEn: 'Hoodies' },
-      { id: 'sport-tshirt', nameAr: 'تيشيرتات رياضية', nameEn: 'Sport Tees' },
-      { id: 'sneakers', nameAr: 'سنيكرز وأحذية رياضية', nameEn: 'Sneakers' },
+      { id: 'trackpants', nameAr: 'كيطمة وبناطيل رياضية', nameEn: 'Trackpants', nameFr: 'Survêtements' },
+      { id: 'athletic-shorts', nameAr: 'شورتات تمرين', nameEn: 'Athletic Shorts', nameFr: 'Shorts de Sport' },
+      { id: 'hoodies', nameAr: 'هوديز وسويت شيرت', nameEn: 'Hoodies', nameFr: 'Hoodies' },
+      { id: 'sport-tshirt', nameAr: 'تيشيرتات رياضية', nameEn: 'Sport Tees', nameFr: 'T-shirts Sport' },
+      { id: 'sneakers', nameAr: 'سنيكرز وأحذية رياضية', nameEn: 'Sneakers', nameFr: 'Sneakers' },
     ],
     keywords: [
       'كيطمة', 'سيرفيت', 'survetement', 'trackpant', 'trackpants', 'jogger', 'joggers', 'جوجرز',
@@ -89,10 +89,10 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
     seoDescriptionAr: 'تشكيلة الصيف الرجالية من متجر رشيد: قمصان صيفية باردة، شورتات، صنادل وسلايدز ونظارات شمسية حصرية.',
     seoDescriptionEn: 'Shop Men\'s Summer Essentials: breezy summer shirts, casual shorts, beach slides and designer sunglasses.',
     categoryTypes: [
-      { id: 'summer-shirt', nameAr: 'قمصان صيفية', nameEn: 'Summer Shirts' },
-      { id: 'shorts', nameAr: 'شورتات كاجوال', nameEn: 'Casual Shorts' },
-      { id: 'slides', nameAr: 'كلاكيط وصنادل', nameEn: 'Slides & Sandals' },
-      { id: 'sunglasses', nameAr: 'نظارات شمسية', nameEn: 'Sunglasses' },
+      { id: 'summer-shirt', nameAr: 'قمصان صيفية', nameEn: 'Summer Shirts', nameFr: 'Chemises d\'Été' },
+      { id: 'shorts', nameAr: 'شورتات كاجوال', nameEn: 'Casual Shorts', nameFr: 'Shorts Décontractés' },
+      { id: 'slides', nameAr: 'كلاكيط وصنادل', nameEn: 'Slides & Sandals', nameFr: 'Sandales & Claquettes' },
+      { id: 'sunglasses', nameAr: 'نظارات شمسية', nameEn: 'Sunglasses', nameFr: 'Lunettes de Soleil' },
     ],
     keywords: [
       'صيف', 'صيفي', 'summer', 'été', 'ete',
@@ -116,9 +116,9 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
     seoDescriptionAr: 'تشكيلة الساعات والعطور الرجالية الفاخرة من متجر رشيد. ساعات راقية وعطور استثنائية وإكسسوارات أنيقة.',
     seoDescriptionEn: 'Curated collection of men\'s watches, signature fragrances, and luxury accessories at Rachid Shop.',
     categoryTypes: [
-      { id: 'watch', nameAr: 'ساعات يد', nameEn: 'Watches' },
-      { id: 'perfume', nameAr: 'عطور رجالية', nameEn: 'Fragrances' },
-      { id: 'accessories', nameAr: 'إكسسوارات أخرى', nameEn: 'Accessories' },
+      { id: 'watch', nameAr: 'ساعات يد', nameEn: 'Watches', nameFr: 'Montres' },
+      { id: 'perfume', nameAr: 'عطور رجالية', nameEn: 'Fragrances', nameFr: 'Parfums' },
+      { id: 'accessories', nameAr: 'إكسسوارات أخرى', nameEn: 'Accessories', nameFr: 'Accessoires' },
     ],
     keywords: [
       'ساعة', 'ساعات', 'watch', 'watches', 'montre', 'montres',
@@ -141,10 +141,10 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
     seoDescriptionAr: 'تسوق تشكيلة الملابس الكلاسيكية للرجال من متجرنا: قمصان راقية، أحذية جلدية وساعات كلاسيكية.',
     seoDescriptionEn: 'Explore classic men\'s collection: tailored shirts, formal trousers and premium leather footwear.',
     categoryTypes: [
-      { id: 'shirt', nameAr: 'قمصان كلاسيكية', nameEn: 'Classic Shirts' },
-      { id: 'trousers', nameAr: 'سراويل قماش', nameEn: 'Trousers' },
-      { id: 'casual-shoe', nameAr: 'أحذية جلدية رسمية', nameEn: 'Formal Shoes' },
-      { id: 'watch', nameAr: 'ساعات يد', nameEn: 'Watches' },
+      { id: 'shirt', nameAr: 'قمصان كلاسيكية', nameEn: 'Classic Shirts', nameFr: 'Chemises Classiques' },
+      { id: 'trousers', nameAr: 'سراويل قماش', nameEn: 'Trousers', nameFr: 'Pantalons' },
+      { id: 'casual-shoe', nameAr: 'أحذية جلدية رسمية', nameEn: 'Formal Shoes', nameFr: 'Chaussures de Ville' },
+      { id: 'watch', nameAr: 'ساعات يد', nameEn: 'Watches', nameFr: 'Montres' },
     ],
     keywords: [
       'كلاسيك', 'كلاسيكي', 'classic', 'classique', 'رسمي', 'formal',
@@ -166,10 +166,10 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
     seoDescriptionAr: 'تشكيلة أولد ماني الحصرية: ملابس رجالية تجمع بين الفخامة الهادئة والأناقة الكلاسيكية الخالدة.',
     seoDescriptionEn: 'Discover the Old Money aesthetic for men: quiet luxury, premium linen, refined polo shirts and loafers.',
     categoryTypes: [
-      { id: 'shirt', nameAr: 'قمصان وبولو راقية', nameEn: 'Polos & Shirts' },
-      { id: 'casual-shoe', nameAr: 'أحذية لوفر وموكاسان', nameEn: 'Loafers' },
-      { id: 'trousers', nameAr: 'سراويل شينو وقماش', nameEn: 'Trousers' },
-      { id: 'watch', nameAr: 'ساعات راقية', nameEn: 'Luxury Watches' },
+      { id: 'shirt', nameAr: 'قمصان وبولو راقية', nameEn: 'Polos & Shirts', nameFr: 'Polos & Chemises' },
+      { id: 'casual-shoe', nameAr: 'أحذية لوفر وموكاسان', nameEn: 'Loafers', nameFr: 'Mocassins & Loafers' },
+      { id: 'trousers', nameAr: 'سراويل شينو وقماش', nameEn: 'Trousers', nameFr: 'Pantalons Chino' },
+      { id: 'watch', nameAr: 'ساعات راقية', nameEn: 'Luxury Watches', nameFr: 'Montres Élégantes' },
     ],
     keywords: [
       'أولد ماني', 'اولد ماني', 'old money', 'oldmoney', 'quiet luxury', 'polo', 'بولو',
@@ -191,10 +191,10 @@ export const LIFESTYLE_COLLECTIONS: CollectionDefinition[] = [
     seoDescriptionAr: 'أحدث تشكيلات لبس الشارع (ستريت وير) والملابس الحضرية الأوفرسايز للرجال بجودة استثنائية وأسعار مميزة.',
     seoDescriptionEn: 'Shop modern men\'s streetwear: oversized graphic tees, heavyweight hoodies, cargo pants and sneakers.',
     categoryTypes: [
-      { id: 'hoodies', nameAr: 'هوديز وسويت شيرت', nameEn: 'Hoodies' },
-      { id: 'jacket', nameAr: 'جواكت أوربان وبومبر', nameEn: 'Urban Jackets' },
-      { id: 'sneakers', nameAr: 'سنيكرز وتريندات', nameEn: 'Sneakers' },
-      { id: 'caps', nameAr: 'قبعات وكابات', nameEn: 'Caps' },
+      { id: 'hoodies', nameAr: 'هوديز وسويت شيرت', nameEn: 'Hoodies', nameFr: 'Hoodies & Sweats' },
+      { id: 'jacket', nameAr: 'جواكت أوربان وبومبر', nameEn: 'Urban Jackets', nameFr: 'Vestes Urbaines' },
+      { id: 'sneakers', nameAr: 'سنيكرز وتريندات', nameEn: 'Sneakers', nameFr: 'Sneakers' },
+      { id: 'caps', nameAr: 'قبعات وكابات', nameEn: 'Caps', nameFr: 'Casquettes' },
     ],
     keywords: [
       'لبس الشارع', 'لبس شارع', 'ستريت وير', 'ستريت', 'streetwear', 'street', 'أوفرسايز', 'اوفرسايز',

@@ -205,9 +205,9 @@ export async function injectSeoTags(htmlTemplate: string, requestUrl: string, ho
   const urlObj = new URL(requestUrl, fullOrigin);
   const pathname = urlObj.pathname;
 
-  // استخراج اللغة المطلوبة من الرابط: ?lang=ar | ?lang=en | ?lang=fr
+  // استخراج اللغة المطلوبة من الرابط: ?lang=fr | ?lang=ar | ?lang=en
   const langParam = urlObj.searchParams.get('lang')?.toLowerCase();
-  const currentLang: 'ar' | 'en' | 'fr' = (langParam === 'en' || langParam === 'fr' || langParam === 'ar') ? langParam : 'ar';
+  const currentLang: 'ar' | 'en' | 'fr' = (langParam === 'en' || langParam === 'fr' || langParam === 'ar') ? langParam : 'fr';
   const isRTL = currentLang === 'ar';
 
   // بناء روابط اللغات الثلاث لـ Googlebot (hreflang alternates)
@@ -218,7 +218,7 @@ export async function injectSeoTags(htmlTemplate: string, requestUrl: string, ho
   const urlAr = `${baseCanonical}?lang=ar`;
   const urlEn = `${baseCanonical}?lang=en`;
   const urlFr = `${baseCanonical}?lang=fr`;
-  const currentCanonicalUrl = currentLang === 'ar' ? baseCanonical : `${baseCanonical}?lang=${currentLang}`;
+  const currentCanonicalUrl = currentLang === 'fr' ? baseCanonical : `${baseCanonical}?lang=${currentLang}`;
 
   let title = STATIC_PAGE_SEO.home[currentLang].title;
   let description = STATIC_PAGE_SEO.home[currentLang].description;

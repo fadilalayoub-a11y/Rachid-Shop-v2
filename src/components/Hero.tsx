@@ -390,10 +390,10 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
 
   const titleSizeClass =
     titleSize === 'xlarge'
-      ? 'text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08]'
+      ? 'text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1]'
       : titleSize === 'normal'
-      ? 'text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight leading-snug'
-      : 'text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-[1.12]';
+      ? 'text-lg sm:text-2xl md:text-3xl font-extrabold tracking-tight leading-snug'
+      : 'text-xl sm:text-3xl md:text-4xl font-black tracking-tight leading-[1.12]';
 
   const isDarkText = textColorTheme === 'dark';
   const titleColor = isDarkText ? 'text-stone-950 drop-shadow-xs' : 'text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)]';
@@ -420,7 +420,7 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
     <div className="w-full overflow-hidden bg-stone-950">
       {/* البانر الإعلاني العريض الممتد على كامل عرض الشاشة مع دقة توزيع النصوص */}
       <section 
-        className="relative w-full h-[420px] sm:h-[500px] md:h-[580px] lg:h-[640px] xl:h-[700px] overflow-hidden bg-stone-950 select-none group/hero"
+        className="relative w-full h-[320px] sm:h-[380px] md:h-[440px] lg:h-[490px] xl:h-[530px] overflow-hidden bg-stone-950 select-none group/hero"
         dir={isRTL ? 'rtl' : 'ltr'}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -480,7 +480,7 @@ export function Hero({ onShopNow }: { onShopNow: () => void }) {
 
         {/* النصوص والأزرار الترويجية المتموضعة في حاوية محاذاة لشبكة الموقع الداخلية */}
         <div className="relative z-20 h-full w-full max-w-7xl 2xl:max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12">
-          <div className={`h-full w-full ${hasCustomCoordinates ? 'relative overflow-hidden pointer-events-none' : `flex flex-col ${verticalClass} py-8 sm:py-12 lg:py-16`}`}>
+          <div className={`h-full w-full ${hasCustomCoordinates ? 'relative overflow-hidden pointer-events-none' : `flex flex-col ${verticalClass} py-6 sm:py-9 lg:py-12`}`}>
             {hasCustomCoordinates ? (
               <div
                 style={{

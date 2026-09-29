@@ -16,9 +16,9 @@ interface LanguageItem {
 }
 
 const LANGUAGES: LanguageItem[] = [
-  { code: 'en', name: 'English', nativeName: 'English', displayLabel: 'English (EN)' },
-  { code: 'ar', name: 'Arabic', nativeName: 'العربية', displayLabel: 'العربية (AR)' },
   { code: 'fr', name: 'French', nativeName: 'Français', displayLabel: 'Français (FR)' },
+  { code: 'ar', name: 'Arabic', nativeName: 'العربية', displayLabel: 'العربية (AR)' },
+  { code: 'en', name: 'English', nativeName: 'English', displayLabel: 'English (EN)' },
 ];
 
 export function LanguageSwitcher({ className = '', dropDirection = 'down' }: LanguageSwitcherProps) {

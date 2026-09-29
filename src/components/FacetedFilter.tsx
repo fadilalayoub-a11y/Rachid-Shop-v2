@@ -16,7 +16,7 @@ interface FacetedFilterProps {
   products: Product[];
   filterState: FilterState;
   onFilterChange: (newFilters: FilterState) => void;
-  availableCategoryTypes?: { id: string; nameAr: string; nameEn: string }[];
+  availableCategoryTypes?: { id: string; nameAr: string; nameEn: string; nameFr?: string }[];
   totalResultsCount: number;
 }
 
@@ -27,7 +27,7 @@ export function FacetedFilter({
   availableCategoryTypes = [],
   totalResultsCount,
 }: FacetedFilterProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   // استخراج المقاسات المتوفرة بالمخزون فقط (Variants with stock > 0)
@@ -106,10 +106,10 @@ export function FacetedFilter({
                 <Filter className="w-3.5 h-3.5" />
               </div>
               <span className="text-xs sm:text-sm font-black tracking-wide text-stone-950 uppercase">
-                {language === 'ar' ? 'تصفية المقاس والنوع' : 'Size & Facet Filters'}
+                {language === 'ar' ? 'تصفية المقاس والنوع' : language === 'fr' ? 'Filtrer par taille et type' : 'Size & Facet Filters'}
               </span>
               <span className="text-[11px] font-bold text-stone-600 bg-stone-100 px-2 py-0.5 rounded-full">
-                {language === 'ar' ? `${totalResultsCount} متوفر` : `${totalResultsCount} items`}
+                {t.itemsAvailableCount(totalResultsCount)}
               </span>
             </div>
 
@@ -120,7 +120,7 @@ export function FacetedFilter({
                   className="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
                 >
                   <RotateCcw className="w-3 h-3" />
-                  <span>{language === 'ar' ? 'إعادة ضبط' : 'Reset'}</span>
+                  <span>{t.resetFilterBtn}</span>
                 </button>
               )}
 
@@ -130,7 +130,7 @@ export function FacetedFilter({
                 className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 text-xs font-bold transition-colors cursor-pointer"
               >
                 <SlidersHorizontal className="w-3.5 h-3.5" />
-                <span>{language === 'ar' ? 'خيارات الفلترة' : 'All Filters'}</span>
+                <span>{t.filterOptionsTitle}</span>
                 {activeFiltersCount > 0 && (
                   <span className="w-4 h-4 rounded-full bg-stone-950 text-white text-[10px] flex items-center justify-center font-bold">
                     {activeFiltersCount}
@@ -146,11 +146,11 @@ export function FacetedFilter({
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-extrabold text-stone-700 uppercase tracking-wider flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-stone-950"></span>
-                  {language === 'ar' ? 'اختر مقاسك أولاً (المتوفر بالمخزون فقط):' : 'Select your size (In-stock variants only):'}
+                  {t.selectSizeFirstTitle}
                 </span>
                 {filterState.size && (
                   <span className="text-[10px] font-bold text-stone-500">
-                    {language === 'ar' ? `المحدد: ${filterState.size}` : `Active: ${filterState.size}`}
+                    {t.activeFilterLabel(filterState.size)}
                   </span>
                 )}
               </div>
@@ -165,7 +165,7 @@ export function FacetedFilter({
                       : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
                   }`}
                 >
-                  {language === 'ar' ? 'جميع المقاسات' : 'All Sizes'}
+                  {t.allSizesLabel}
                 </button>
 
                 {availableSizes.map((size) => {
@@ -193,7 +193,7 @@ export function FacetedFilter({
           {availableCategoryTypes.length > 0 && (
             <div className="hidden md:flex items-center gap-2 pt-2 border-t border-stone-100 flex-wrap">
               <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
-                {language === 'ar' ? 'نوع القطعة:' : 'Item Type:'}
+                {t.itemTypeLabel}
               </span>
 
               <button
@@ -204,12 +204,12 @@ export function FacetedFilter({
                     : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
                 }`}
               >
-                {language === 'ar' ? 'الكل' : 'All'}
+                {t.allTypesLabel}
               </button>
 
               {availableCategoryTypes.map((cat) => {
                 const isSelected = filterState.categoryType === cat.id;
-                const label = language === 'ar' ? cat.nameAr : cat.nameEn;
+                const label = language === 'ar' ? cat.nameAr : (language === 'fr' ? (cat.nameFr || cat.nameEn) : cat.nameEn);
 
                 return (
                   <button
@@ -253,7 +253,7 @@ export function FacetedFilter({
             {availableCategoryTypes.length > 0 && (
               <div className="mb-5">
                 <span className="block text-xs font-black text-stone-900 uppercase tracking-wider mb-2.5">
-                  {language === 'ar' ? 'نوع القطعة' : 'Item Type'}
+                  {t.itemTypeLabel}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -264,7 +264,7 @@ export function FacetedFilter({
                         : 'bg-stone-50 text-stone-700 border-stone-200'
                     }`}
                   >
-                    {language === 'ar' ? 'جميع الأنواع' : 'All Types'}
+                    {t.allTypesLabel}
                   </button>
                   {availableCategoryTypes.map(cat => (
                     <button
@@ -276,7 +276,7 @@ export function FacetedFilter({
                           : 'bg-white text-stone-700 border-stone-200'
                       }`}
                     >
-                      {language === 'ar' ? cat.nameAr : cat.nameEn}
+                      {language === 'ar' ? cat.nameAr : (language === 'fr' ? (cat.nameFr || cat.nameEn) : cat.nameEn)}
                     </button>
                   ))}
                 </div>
@@ -286,13 +286,13 @@ export function FacetedFilter({
             {/* نطاق السعر */}
             <div className="mb-5">
               <span className="block text-xs font-black text-stone-900 uppercase tracking-wider mb-2.5">
-                {language === 'ar' ? 'السعر' : 'Price Range'}
+                {t.priceRangeTitle}
               </span>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { id: 'under-200', labelAr: 'أقل من 200 د.م', labelEn: '< 200 DH' },
-                  { id: '200-400', labelAr: 'من 200 إلى 400 د.م', labelEn: '200 - 400 DH' },
-                  { id: '400-plus', labelAr: 'أكثر من 400 د.م', labelEn: '> 400 DH' },
+                  { id: 'under-200', label: t.priceUnder200 },
+                  { id: '200-400', label: t.price200to400 },
+                  { id: '400-plus', label: t.priceOver400 },
                 ].map(p => (
                   <button
                     key={p.id}
@@ -303,7 +303,7 @@ export function FacetedFilter({
                         : 'bg-stone-50 text-stone-700 border-stone-200'
                     }`}
                   >
-                    {language === 'ar' ? p.labelAr : p.labelEn}
+                    {p.label}
                   </button>
                 ))}
               </div>
@@ -315,13 +315,13 @@ export function FacetedFilter({
                 onClick={handleClearAll}
                 className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-700 font-bold text-xs hover:bg-stone-50 cursor-pointer"
               >
-                {language === 'ar' ? 'إعادة ضبط' : 'Reset'}
+                {t.resetFilterBtn}
               </button>
               <button
                 onClick={() => setMobileDrawerOpen(false)}
                 className="flex-1 py-3 rounded-xl bg-stone-950 text-white font-bold text-xs hover:bg-stone-900 shadow-md cursor-pointer"
               >
-                {language === 'ar' ? `عرض النتائج (${totalResultsCount})` : `Show Results (${totalResultsCount})`}
+                {t.showResultsCountBtn(totalResultsCount)}
               </button>
             </div>
           </div>

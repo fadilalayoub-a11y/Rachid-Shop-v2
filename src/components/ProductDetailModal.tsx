@@ -50,11 +50,12 @@ export function ProductDetailModal({
 
   const handleShareProduct = async () => {
     const shareUrl = window.location.href;
+    const localizedName = currentName || product?.name || t.brandName;
     if (navigator.share) {
       try {
         await navigator.share({
-          title: product?.name || 'RACHID SHOP',
-          text: `اكتشف ${product?.name} في متجر رشيد`,
+          title: `${localizedName} | ${t.brandName}`,
+          text: t.shareProductText(localizedName),
           url: shareUrl,
         });
         return;
@@ -172,17 +173,17 @@ export function ProductDetailModal({
               <button
                 onClick={handleShareProduct}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold text-stone-700 bg-stone-100 hover:bg-stone-200 transition-all cursor-pointer active:scale-95 border border-stone-200"
-                title="مشاركة رابط المنتج"
+                title={t.shareProductTitle}
               >
                 {copiedLink ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700 font-bold">تم نسخ الرابط!</span>
+                    <span className="text-emerald-700 font-bold">{t.shareProductCopied}</span>
                   </>
                 ) : (
                   <>
                     <Share2 className="w-3.5 h-3.5" />
-                    <span>مشاركة الرابط</span>
+                    <span>{t.shareProductBtn}</span>
                   </>
                 )}
               </button>

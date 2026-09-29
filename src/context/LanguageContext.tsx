@@ -72,6 +72,10 @@ export interface Translations {
   easyReturn: string;
   close: string;
   backToShopping: string;
+  shareProductBtn: string;
+  shareProductCopied: string;
+  shareProductTitle: string;
+  shareProductText: (name: string) => string;
   zoomImage: string;
   inStock: string;
   sizeLabel: string;
@@ -98,6 +102,25 @@ export interface Translations {
   noDiscountsMessage: string;
   curatedCollectionSubtitle: string;
   noCategoryProducts: string;
+
+  // Category and Filter Page Translations
+  itemsAvailableCount: (count: number) => string;
+  curatedCollectionBadge: string;
+  noMatchingFilterItemsTitle: string;
+  noMatchingFilterItemsDesc: string;
+  resetAllFiltersBtn: string;
+  selectSizeFirstTitle: string;
+  activeFilterLabel: (size: string) => string;
+  allSizesLabel: string;
+  itemTypeLabel: string;
+  allTypesLabel: string;
+  filterOptionsTitle: string;
+  priceRangeTitle: string;
+  priceUnder200: string;
+  price200to400: string;
+  priceOver400: string;
+  resetFilterBtn: string;
+  showResultsCountBtn: (count: number) => string;
 
   // Cart Drawer
   cartTitle: string;
@@ -222,6 +245,10 @@ export const translations: Record<Language, Translations> = {
     easyReturn: 'Easy Exchange & Return',
     close: 'Close',
     backToShopping: 'Back to Shopping',
+    shareProductBtn: 'Share Link',
+    shareProductCopied: 'Link Copied!',
+    shareProductTitle: 'Share Product Link',
+    shareProductText: (name: string) => `Discover ${name} at Rachid Shop`,
     zoomImage: 'Zoom Image',
     inStock: 'In Stock',
     sizeLabel: 'Size:',
@@ -247,6 +274,24 @@ export const translations: Record<Language, Translations> = {
     noDiscountsMessage: 'No discounted products at the moment.',
     curatedCollectionSubtitle: 'Curated styles designed for exceptional comfort and modern looks',
     noCategoryProducts: 'No products found in this category.',
+
+    itemsAvailableCount: (count: number) => `${count} ${count === 1 ? 'item' : 'items'} available`,
+    curatedCollectionBadge: 'Curated Drop',
+    noMatchingFilterItemsTitle: 'No items match your selected filters',
+    noMatchingFilterItemsDesc: 'Try selecting a different size or clear your filters to view more items.',
+    resetAllFiltersBtn: 'Reset All Filters',
+    selectSizeFirstTitle: 'Select your size first (In-stock variants only):',
+    activeFilterLabel: (size: string) => `Selected: ${size}`,
+    allSizesLabel: 'All Sizes',
+    itemTypeLabel: 'Item Type:',
+    allTypesLabel: 'All',
+    filterOptionsTitle: 'Filter Options',
+    priceRangeTitle: 'Price Range',
+    priceUnder200: 'Under 200 DH',
+    price200to400: '200 - 400 DH',
+    priceOver400: 'Over 400 DH',
+    resetFilterBtn: 'Reset',
+    showResultsCountBtn: (count: number) => `Show Results (${count})`,
 
     cartTitle: 'Shopping Cart',
     cartEmptyTitle: 'Your cart is empty',
@@ -365,6 +410,10 @@ export const translations: Record<Language, Translations> = {
     easyReturn: 'إمكانية الاستبدال والاسترجاع',
     close: 'إغلاق',
     backToShopping: 'العودة للتسوق',
+    shareProductBtn: 'مشاركة الرابط',
+    shareProductCopied: 'تم نسخ الرابط!',
+    shareProductTitle: 'مشاركة رابط المنتج',
+    shareProductText: (name: string) => `اكتشف ${name} في متجر رشيد`,
     zoomImage: 'تكبير الصورة',
     inStock: 'متوفر',
     sizeLabel: 'المقاس:',
@@ -390,6 +439,24 @@ export const translations: Record<Language, Translations> = {
     noDiscountsMessage: 'لا توجد تخفيضات حالياً في هذا القسم.',
     curatedCollectionSubtitle: 'تشكيلة مختارة بعناية توفر لك أعلى مستويات الراحة والأناقة',
     noCategoryProducts: 'لا توجد منتجات في هذا التصنيف حالياً.',
+
+    itemsAvailableCount: (count: number) => `${count} قطعة متوفرة`,
+    curatedCollectionBadge: 'مجموعة منتقاة',
+    noMatchingFilterItemsTitle: 'لا توجد قطع متوفرة بهذا المقاس أو الفلتر',
+    noMatchingFilterItemsDesc: 'جرب اختيار مقاس آخر أو إلغاء بعض الفلاتر لعرض باقي القطع.',
+    resetAllFiltersBtn: 'إعادة ضبط كل الفلاتر',
+    selectSizeFirstTitle: 'اختر مقاسك أولاً (المتوفر بالمخزون فقط):',
+    activeFilterLabel: (size: string) => `المحدد: ${size}`,
+    allSizesLabel: 'جميع المقاسات',
+    itemTypeLabel: 'نوع القطعة:',
+    allTypesLabel: 'الكل',
+    filterOptionsTitle: 'خيارات الفلترة والتصفية',
+    priceRangeTitle: 'نطاق السعر',
+    priceUnder200: 'أقل من 200 د.م',
+    price200to400: 'من 200 إلى 400 د.م',
+    priceOver400: 'أكثر من 400 د.م',
+    resetFilterBtn: 'إعادة ضبط',
+    showResultsCountBtn: (count: number) => `عرض النتائج (${count})`,
 
     cartTitle: 'سلة المشتريات',
     cartEmptyTitle: 'سلة المشتريات فارغة',
@@ -508,6 +575,10 @@ export const translations: Record<Language, Translations> = {
     easyReturn: 'Échange et Retour Faciles',
     close: 'Fermer',
     backToShopping: 'Retour aux achats',
+    shareProductBtn: 'Partager le lien',
+    shareProductCopied: 'Lien copié !',
+    shareProductTitle: 'Partager le lien du produit',
+    shareProductText: (name: string) => `Découvrez ${name} chez Rachid Shop`,
     zoomImage: 'Agrandir l\'image',
     inStock: 'En stock',
     sizeLabel: 'Taille :',
@@ -533,6 +604,24 @@ export const translations: Record<Language, Translations> = {
     noDiscountsMessage: 'Aucun produit en promotion pour le moment.',
     curatedCollectionSubtitle: 'Une sélection soignée alliant élégance, modernité et confort',
     noCategoryProducts: 'Aucun produit trouvé dans cette catégorie.',
+
+    itemsAvailableCount: (count: number) => `${count} ${count === 1 ? 'article disponible' : 'articles disponibles'}`,
+    curatedCollectionBadge: 'Collection Exclusive',
+    noMatchingFilterItemsTitle: 'Aucun article ne correspond aux filtres sélectionnés',
+    noMatchingFilterItemsDesc: 'Essayez de sélectionner une autre taille ou réinitialisez vos filtres pour voir d\'autres articles.',
+    resetAllFiltersBtn: 'Réinitialiser tous les filtres',
+    selectSizeFirstTitle: 'Choisissez votre taille (Variantes en stock uniquement) :',
+    activeFilterLabel: (size: string) => `Sélectionné : ${size}`,
+    allSizesLabel: 'Toutes les Tailles',
+    itemTypeLabel: 'Type de Pièce :',
+    allTypesLabel: 'Tous',
+    filterOptionsTitle: 'Options de Filtrage',
+    priceRangeTitle: 'Fourchette de Prix',
+    priceUnder200: 'Moins de 200 DH',
+    price200to400: '200 - 400 DH',
+    priceOver400: 'Plus de 400 DH',
+    resetFilterBtn: 'Réinitialiser',
+    showResultsCountBtn: (count: number) => `Afficher les résultats (${count})`,
 
     cartTitle: 'Mon Panier',
     cartEmptyTitle: 'Votre panier est vide',
@@ -616,7 +705,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    return 'ar'; // اللغة الافتراضية
+    return 'fr'; // اللغة الافتراضية الرسمية هي الفرنسية
   });
 
   const setLanguage = (lang: Language) => {

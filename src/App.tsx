@@ -18,21 +18,21 @@ export default function App() {
       <Route path="/clothes" element={<Store initialTab="clothes" />} />
       <Route path="/accessories" element={<Store initialTab="accessories" />} />
       
-      {/* 3. رابط مخصص للتصنيفات البديلة والمجموعات المنتقاة */}
+      {/* 4. رابط مخصص للتصنيفات البديلة والمجموعات المنتقاة */}
       <Route path="/category/:categorySlug" element={<Store />} />
       <Route path="/collection/:collectionSlug" element={<Store />} />
       <Route path="/collections/:collectionSlug" element={<Store />} />
 
-      {/* 4. رابط مخصص ومباشر لكل منتج (Deep Linking) */}
+      {/* 5. رابط مخصص ومباشر لكل منتج (Deep Linking) */}
       <Route path="/product/:productId" element={<Store />} />
 
-      {/* 5. لوحة التحكم */}
+      {/* 6. لوحة التحكم */}
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/products/create" element={<Admin defaultTab="add_product" />} />
       <Route path="/admin/products" element={<Admin defaultTab="inventory" />} />
       <Route path="/admin/orders" element={<Admin defaultTab="orders" />} />
 
-      {/* 6. تحويل أي مسار غير معروف إلى الصفحة الرئيسية */}
+      {/* 7. تحويل أي مسار غير معروف إلى الصفحة الرئيسية */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
