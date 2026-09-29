@@ -1,6 +1,6 @@
-import { Package, Plus, ClipboardList, Image as ImageIcon, Layers } from 'lucide-react';
+import { Package, Plus, ClipboardList, Image as ImageIcon, Layers, FolderKanban } from 'lucide-react';
 
-export type AdminTabType = 'inventory' | 'add_product' | 'orders' | 'hero_images' | 'category_images';
+export type AdminTabType = 'inventory' | 'add_product' | 'section_products' | 'orders' | 'hero_images' | 'category_images';
 
 interface AdminTabsNavProps {
   currentTab: AdminTabType;
@@ -46,6 +46,18 @@ export function AdminTabsNav({
       >
         <Plus className="w-4 h-4" />
         <span>إضافة المنتجات</span>
+      </button>
+
+      <button
+        onClick={() => onTabChange('section_products')}
+        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
+          currentTab === 'section_products'
+            ? 'bg-gray-900 text-white shadow-sm'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+        }`}
+      >
+        <FolderKanban className="w-4 h-4 text-amber-500" />
+        <span>تحديد منتجات القسم (Sections)</span>
       </button>
 
       <button

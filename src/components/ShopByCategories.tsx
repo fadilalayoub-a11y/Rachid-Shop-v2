@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { db } from '../lib/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query } from 'firebase/firestore';
 import { Product } from '../types';
+import { getProductEffectiveCategory, getProductEffectiveSubcategory } from '../utils/productClassifier';
 
 // استيراد الصور الافتراضية
 import prevJeansImg from '../assets/images/cat_jeans_editorial_1790338015205.jpg';
@@ -146,29 +147,75 @@ export interface ShopByCategoriesProps {
 export function ShopByCategories({ products = [] }: ShopByCategoriesProps) {
   const { language, isRTL } = useLanguage();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [liveProducts, setLiveProducts] = useState<Product[]>(products);
+
+  // مزامنة حية لمنتجات المتجر للتأكد من دقة عداد القطع في كل كارت فئة
+  useEffect(() => {
+    if (products && products.length > 0) {
+      setLiveProducts(products);
+      return;
+    }
+
+    const q = query(collection(db, 'products'));
+    const unsub = onSnapshot(
+      q,
+      (snapshot) => {
+        const fetched: Product[] = [];
+        snapshot.forEach((d) => {
+          fetched.push({ id: d.id, ...d.data() } as Product);
+        });
+        if (fetched.length > 0) {
+          setLiveProducts(fetched);
+        }
+      },
+      (err) => {
+        console.warn('Error fetching live products in ShopByCategories:', err);
+      }
+    );
+
+    return () => unsub();
+  }, [products]);
 
   // Helper to calculate product count per category
   const getCategoryItemCount = (item: CategoryCard): number => {
-    if (!products || products.length === 0) return 0;
-    const matching = products.filter((p) => {
-      if (p.subcategory_id === item.id || p.subcategory === item.id) return true;
-      const corpus = `${p.name || ''} ${p.category || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
-      if (item.id === 't-shirts' && (corpus.includes('shirt') || corpus.includes('تيشيرت') || corpus.includes('قميص'))) return true;
-      if (item.id === 'hoodies' && (corpus.includes('hoodie') || corpus.includes('هودي') || corpus.includes('سويت'))) return true;
-      if (item.id === 'jackets' && (corpus.includes('jacket') || corpus.includes('جاكيت') || corpus.includes('معطف'))) return true;
-      if (item.id === 'jeans' && (corpus.includes('jean') || corpus.includes('جينز'))) return true;
-      if (item.id === 'sweatpants' && (corpus.includes('pant') || corpus.includes('سروال') || corpus.includes('كيطمة'))) return true;
-      if (item.id === 'sneakers' && (corpus.includes('sneaker') || corpus.includes('سنيكرز') || p.category === 'shoes')) return true;
-      if (item.id === 'formal-shoes' && (corpus.includes('classic') || corpus.includes('كلاسيك') || corpus.includes('حذاء'))) return true;
-      if (item.id === 'running-shoes' && (corpus.includes('sport') || corpus.includes('رياضي') || p.category === 'shoes')) return true;
-      if (item.id === 'sandals' && (corpus.includes('sandal') || corpus.includes('صندل') || corpus.includes('كلاكيت'))) return true;
-      if (item.id === 'watches-perfumes' && (corpus.includes('watch') || corpus.includes('ساعة') || corpus.includes('عطر') || p.category === 'accessories')) return true;
-      if (item.id === 'sunglasses' && (corpus.includes('sunglass') || corpus.includes('نظار'))) return true;
-      if (item.id === 'caps' && (corpus.includes('cap') || corpus.includes('قبعة'))) return true;
+    const listToCount = liveProducts && liveProducts.length > 0 ? liveProducts : products;
+    if (!listToCount || listToCount.length === 0) return 0;
 
-      if (item.link.includes('shoes') && p.category === 'shoes') return true;
-      if (item.link.includes('clothes') && p.category === 'clothes') return true;
-      if (item.link.includes('accessories') && p.category === 'accessories') return true;
+    const matching = listToCount.filter((p) => {
+      const effCat = getProductEffectiveCategory(p);
+      const effSub = getProductEffectiveSubcategory(p);
+
+      if (p.subcategory_id === item.id || p.subcategory === item.id || effSub === item.id) return true;
+
+      const rawCorpus = `${p.name || ''} ${p.nameAr || ''} ${p.nameEn || ''} ${p.description || ''} ${p.descriptionAr || ''} ${p.category || ''} ${effCat} ${p.subcategory || ''} ${(p.tags || []).join(' ')}`.toLowerCase();
+      const normalize = (s: string) => s.replace(/[أإآ]/g, 'ا').replace(/ذ/g, 'د');
+      const corpus = normalize(rawCorpus);
+
+      if (item.id === 't-shirts' && (effSub === 't-shirts' || effSub === 'polo' || corpus.includes('shirt') || corpus.includes('تيشيرت') || corpus.includes('قميص'))) return true;
+      if (item.id === 'hoodies' && (effSub === 'hoodies' || corpus.includes('hoodie') || corpus.includes('هودي') || corpus.includes('سويت'))) return true;
+      if (item.id === 'jackets' && (effSub === 'jackets' || corpus.includes('jacket') || corpus.includes('جاكيت') || corpus.includes('معطف'))) return true;
+      if (item.id === 'jeans' && (effSub === 'jeans' || corpus.includes('jean') || corpus.includes('جينز'))) return true;
+      if (item.id === 'sweatpants' && (effSub === 'sweatpants' || corpus.includes('pant') || corpus.includes('سروال') || corpus.includes('كيطمة'))) return true;
+      if (item.id === 'trousers' && (effSub === 'trousers' || corpus.includes('trouser') || corpus.includes('قماش'))) return true;
+      if (item.id === 'sneakers' && (effSub === 'sneakers' || corpus.includes('sneaker') || corpus.includes('سنيكرز') || effCat === 'shoes')) return true;
+      if (item.id === 'formal-shoes' && (effSub === 'formal-shoes' || corpus.includes('classic') || corpus.includes('كلاسيك') || corpus.includes('موكاسان'))) return true;
+      
+      // أحذية الجري والرياضة: تشمل كل أحذية الجري والسنيكرز الرياضية والأحذية المخصصة للرياضة
+      if (item.id === 'running-shoes') {
+        if (effSub === 'running-shoes') return true;
+        if (effCat === 'shoes' && (corpus.includes('جري') || corpus.includes('running') || corpus.includes('رياضي') || corpus.includes('sport') || corpus.includes('سنيكرز') || corpus.includes('سبادري'))) return true;
+        if (corpus.includes('حداء جري') || corpus.includes('حذاء جري') || corpus.includes('running') || corpus.includes('حذاء رياضي')) return true;
+      }
+
+      if (item.id === 'sandals' && (effSub === 'sandals' || corpus.includes('sandal') || corpus.includes('صندل') || corpus.includes('كلاكيت') || corpus.includes('كلاكيط'))) return true;
+      if (item.id === 'watches-perfumes' && (effSub === 'watches' || effSub === 'perfumes' || corpus.includes('watch') || corpus.includes('ساعة') || corpus.includes('عطر') || effCat === 'accessories')) return true;
+      if (item.id === 'sunglasses' && (effSub === 'sunglasses' || corpus.includes('sunglass') || corpus.includes('نظار'))) return true;
+      if (item.id === 'caps-hats' || item.id === 'caps' && (effSub === 'caps-hats' || corpus.includes('cap') || corpus.includes('قبعة'))) return true;
+      if (item.id === 'bags' && (effSub === 'bags' || corpus.includes('bag') || corpus.includes('حقيبة') || corpus.includes('صاك'))) return true;
+
+      if (item.link.includes('shoes') && effCat === 'shoes') return true;
+      if (item.link.includes('clothes') && effCat === 'clothes') return true;
+      if (item.link.includes('accessories') && effCat === 'accessories') return true;
       return false;
     });
     return matching.length;

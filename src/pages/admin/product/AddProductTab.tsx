@@ -17,22 +17,24 @@ import {
 import { ProductStyle } from '../../../types';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
+import { classifyProduct, ProductClassification } from '../../../utils/productClassifier';
+import { getSubcategoriesForCategory } from '../../../constants/categories';
 
 export interface AddProductTabProps {
   productsCount: number;
   onGoToInventory: () => void;
 }
 
-// 1. نوع المنتج فقط (3 أقسام أساسية)
-const PRODUCT_CATEGORIES: { id: 'clothes' | 'shoes' | 'accessories'; nameAr: string; nameEn: string; icon: string }[] = [
-  { id: 'clothes', nameAr: 'ملابس', nameEn: 'Clothes', icon: '👕' },
+// 1. نوع المنتج فقط (3 أقسام أساسية - الحذاء أولاً، ثم الملابس، ثم الإكسسوارات)
+const PRODUCT_CATEGORIES: { id: 'shoes' | 'clothes' | 'accessories'; nameAr: string; nameEn: string; icon: string }[] = [
   { id: 'shoes', nameAr: 'أحذية', nameEn: 'Shoes', icon: '👟' },
+  { id: 'clothes', nameAr: 'ملابس', nameEn: 'Clothes', icon: '👕' },
   { id: 'accessories', nameAr: 'إكسسوارات', nameEn: 'Accessories', icon: '🕶️' },
 ];
 
 // 2. ستايل المنتج فقط (5 أنماط رئيسية)
 const STYLE_OPTIONS: { id: ProductStyle; nameAr: string; nameEn: string; desc: string; icon: string }[] = [
-  { id: 'old_money', nameAr: 'أولد موني', nameEn: 'Old Money', desc: 'أناقة كلاسيكية هادئة وفاخرة', icon: '👑' },
+  { id: 'old_money', nameAr: 'أولد ماني', nameEn: 'Old Money', desc: 'أناقة كلاسيكية هادئة وفاخرة', icon: '👑' },
   { id: 'classic', nameAr: 'كلاسيك', nameEn: 'Classic', desc: 'رسمي وأنيق لجميع المناسبات', icon: '👔' },
   { id: 'streetwear', nameAr: 'ستريت وير', nameEn: 'Streetwear', desc: 'طابع شبابي عصري وأوفر سايز', icon: '🔥' },
   { id: 'sportswear', nameAr: 'سبورتس وير', nameEn: 'Sportswear', desc: 'ملابس وأحذية رياضية عملية', icon: '⚡' },
@@ -41,15 +43,22 @@ const STYLE_OPTIONS: { id: ProductStyle; nameAr: string; nameEn: string; desc: s
 
 // مقاسات مقترحة حسب نوع المنتج
 const PRESET_SIZES = {
-  clothes: ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
   shoes: ['39', '40', '41', '42', '43', '44', '45'],
+  clothes: ['S', 'M', 'L', 'XL', 'XXL', '3XL'],
   accessories: ['قياس موحد (One Size)'],
 };
 
 export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabProps) {
-  // 1. قسم نوع المنتج والستايل
-  const [category, setCategory] = useState<'clothes' | 'shoes' | 'accessories'>('clothes');
-  const [style, setStyle] = useState<ProductStyle>('streetwear');
+  // 1. أولاً وثانياً: نوع المنتج وتصنيفه الفرعي (إجباري للدقة)
+  const [category, setCategory] = useState<'shoes' | 'clothes' | 'accessories'>('shoes');
+  const [subcategory, setSubcategory] = useState<string>('sneakers');
+  const [isManualSelection, setIsManualSelection] = useState(false);
+  const [style, setStyle] = useState<ProductStyle>('old_money');
+
+  // قائمة الأقسام الفرعية التابعة لنوع المنتج المختار حالياً
+  const currentSubcategories = useMemo(() => {
+    return getSubcategoriesForCategory(category);
+  }, [category]);
 
   // 2. الأسماء باللغات الثلاث
   const [nameAr, setNameAr] = useState('');
@@ -75,9 +84,10 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
 
   // 6. المقاسات والمخزون
   const [inventoryList, setInventoryList] = useState<{ size: string; stock: number }[]>([
-    { size: 'M', stock: 5 },
-    { size: 'L', stock: 5 },
-    { size: 'XL', stock: 5 },
+    { size: '40', stock: 5 },
+    { size: '41', stock: 5 },
+    { size: '42', stock: 5 },
+    { size: '43', stock: 5 },
   ]);
   const [customSizeInput, setCustomSizeInput] = useState('');
   const [bulkStockVal, setBulkStockVal] = useState('5');
@@ -94,21 +104,57 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
     text: '',
   });
 
-  // تحديث المقاسات المقترحة عند تغيير نوع المنتج
+  // الخوارزمية الذكية لتصنيف المنتج تلقائياً من الاسم والوصف
+  const detectedClassification = useMemo(() => {
+    return classifyProduct(nameAr || nameEn || nameFr, descriptionAr, [keywordsAr, keywordsEn, keywordsFr]);
+  }, [nameAr, nameEn, nameFr, descriptionAr, keywordsAr, keywordsEn, keywordsFr]);
+
+  // مزامنة الفئة والمقاسات تلقائياً عند كتابة اسم المنتج إن لم يحددها المستخدم يدوياً
+  useEffect(() => {
+    if (!isManualSelection && (nameAr.trim().length >= 2 || nameEn.trim().length >= 2 || nameFr.trim().length >= 2)) {
+      if (detectedClassification.category && detectedClassification.category !== category) {
+        setCategory(detectedClassification.category);
+        const subcats = getSubcategoriesForCategory(detectedClassification.category);
+        if (detectedClassification.subcategory) {
+          setSubcategory(detectedClassification.subcategory);
+        } else if (subcats.length > 0) {
+          setSubcategory(subcats[0].id);
+        }
+      }
+      if (detectedClassification.suggestedStyle && style === 'old_money') {
+        setStyle(detectedClassification.suggestedStyle);
+      }
+    }
+  }, [detectedClassification.category, detectedClassification.subcategory, detectedClassification.suggestedStyle, isManualSelection]);
+
+  // تحديث المقاسات المقترحة وتصنيف الفئة عند تغيير نوع المنتج
   const handleCategoryChange = (newCat: 'clothes' | 'shoes' | 'accessories') => {
+    setIsManualSelection(true);
     setCategory(newCat);
+    const subcats = getSubcategoriesForCategory(newCat);
+    if (subcats.length > 0) {
+      setSubcategory(subcats[0].id);
+    } else {
+      setSubcategory('');
+    }
+
     if (newCat === 'shoes') {
       setInventoryList([
-        { size: '40', stock: 4 },
+        { size: '39', stock: 4 },
+        { size: '40', stock: 5 },
         { size: '41', stock: 5 },
         { size: '42', stock: 5 },
-        { size: '43', stock: 4 },
+        { size: '43', stock: 5 },
+        { size: '44', stock: 4 },
+        { size: '45', stock: 3 },
       ]);
     } else if (newCat === 'clothes') {
       setInventoryList([
+        { size: 'S', stock: 5 },
         { size: 'M', stock: 5 },
         { size: 'L', stock: 5 },
         { size: 'XL', stock: 5 },
+        { size: 'XXL', stock: 5 },
       ]);
     } else {
       setInventoryList([{ size: 'قياس موحد (One Size)', stock: 10 }]);
@@ -186,6 +232,21 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setFormMessage({ type: '', text: '' });
+
+    if (!category) {
+      setFormMessage({ type: 'error', text: 'يرجى اختيار نوع المنتج (أحذية، ملابس، أو إكسسوارات) أولاً كطلب ضروري.' });
+      return;
+    }
+
+    if (!subcategory) {
+      setFormMessage({
+        type: 'error',
+        text: category === 'shoes'
+          ? 'يرجى تحديد تصنيف الحذاء بدقة (سنيكرز، أحذية كلاسيكية وموكاسان، جري، صنادل، أو بوت) كطلب ضروري.'
+          : 'يرجى تحديد التصنيف التفصيلي للمنتج كطلب ضروري.'
+      });
+      return;
+    }
 
     if (!nameAr.trim()) {
       setFormMessage({ type: 'error', text: 'يرجى إدخال اسم المنتج بالعربية على الأقل.' });
@@ -270,19 +331,19 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
       const parsedKwFr = parseKeywords(keywordsFr);
       const allTags = Array.from(new Set([...parsedKwAr, ...parsedKwEn, ...parsedKwFr]));
 
-      // 3. إنشاء كائن المنتج
+      // 3. إنشاء كائن المنتج الآمن لـ Firestore (بدون أي قيم undefined)
       const cleanTitle = nameAr.trim();
-      const productPayload = {
+      const rawProductPayload = {
         title: cleanTitle,
         name: cleanTitle,
         nameAr: cleanTitle,
-        nameEn: nameEn.trim() || undefined,
-        nameFr: nameFr.trim() || undefined,
+        nameEn: nameEn.trim() || null,
+        nameFr: nameFr.trim() || null,
 
         description: descriptionAr.trim() || cleanTitle,
         descriptionAr: descriptionAr.trim() || cleanTitle,
-        descriptionEn: descriptionEn.trim() || undefined,
-        descriptionFr: descriptionFr.trim() || undefined,
+        descriptionEn: descriptionEn.trim() || null,
+        descriptionFr: descriptionFr.trim() || null,
 
         keywordsAr: parsedKwAr,
         keywordsEn: parsedKwEn,
@@ -293,18 +354,20 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
         compare_at_price: originalPrice ? parseFloat(originalPrice) : null,
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
 
-        // الأقسام والستايل فقط
+        // الأقسام والستايل (تم تحديدها أولاً وبشكل إجباري لدقة التصنيف)
         category: category,
         category_id: category,
-        style: style,
+        subcategory: subcategory,
+        subcategory_id: subcategory,
+        style: style || detectedClassification.suggestedStyle || 'casual',
 
         // القياس والمخزون
         inventory: inventoryList,
         sizes: inventoryList.map((i) => i.size),
 
         // الصور
-        image: primaryImage,
-        secondaryImage: secondaryImage,
+        image: primaryImage || '',
+        secondaryImage: secondaryImage || null,
         images: uploadedUrls,
 
         // قيم افتراضية متوافقة
@@ -313,6 +376,11 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
         badge: 'none',
         createdAt: serverTimestamp(),
       };
+
+      // إزالة أي قيمة undefined بشكل قطعي لتفادي أخطاء Firestore
+      const productPayload = Object.fromEntries(
+        Object.entries(rawProductPayload).filter(([_, v]) => v !== undefined)
+      );
 
       await addDoc(collection(db, 'products'), productPayload);
 
@@ -414,70 +482,148 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* 1. قسم نوع المنتج و قسم الستايل */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-5">
-          <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-            <Layers className="w-4 h-4 text-blue-600" />
-            <h3 className="text-sm font-bold text-gray-900">1. الأقسام (نوع المنتج & الستايل)</h3>
+        {/* الخطوة 1: أولاً - نوع المنتج الرئيسي (إجباري) */}
+        <div className="bg-white p-5 rounded-2xl border-2 border-stone-900 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-full bg-stone-950 text-white flex items-center justify-center text-xs font-black">1</span>
+              <h3 className="text-sm font-black text-stone-950">أولاً: نوع المنتج (Product Type)</h3>
+              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                * طلب ضروري وإجباري
+              </span>
+            </div>
+            <span className="text-xs text-stone-500 font-medium">القسم العام للمنتج</span>
           </div>
 
-          {/* نوع المنتج */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-2">
-              نوع المنتج <span className="text-rose-500">*</span>
-            </label>
-            <div className="grid grid-cols-3 gap-3">
-              {PRODUCT_CATEGORIES.map((c) => (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {PRODUCT_CATEGORIES.map((cat) => {
+              const isSelected = category === cat.id;
+              return (
                 <button
-                  key={c.id}
+                  key={cat.id}
                   type="button"
-                  onClick={() => handleCategoryChange(c.id)}
-                  className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1.5 ${
-                    category === c.id
-                      ? 'border-blue-600 bg-blue-50/80 ring-2 ring-blue-500/20 text-blue-900 shadow-2xs font-bold'
-                      : 'border-gray-200 hover:border-gray-300 bg-gray-50/30 text-gray-700'
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 text-right ${
+                    isSelected
+                      ? 'border-stone-950 bg-stone-950 text-white shadow-md ring-2 ring-stone-950/20'
+                      : 'border-stone-200 hover:border-stone-400 bg-stone-50/50 text-stone-800'
                   }`}
                 >
-                  <span className="text-2xl">{c.icon}</span>
-                  <span className="text-xs font-bold">{c.nameAr}</span>
-                  <span className="text-[10px] text-gray-400 font-mono" dir="ltr">{c.nameEn}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{cat.icon}</span>
+                    <div>
+                      <p className="text-sm font-black">{cat.nameAr}</p>
+                      <p className={`text-[11px] font-medium ${isSelected ? 'text-stone-300' : 'text-stone-500'}`}>
+                        {cat.nameEn}
+                      </p>
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <span className="w-5 h-5 rounded-full bg-white text-stone-950 flex items-center justify-center text-xs font-black">
+                      ✓
+                    </span>
+                  )}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* قسم الستايل */}
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-2">
-              قسم الستايل <span className="text-rose-500">*</span>
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
-              {STYLE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setStyle(opt.id)}
-                  className={`p-3 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-between ${
-                    style === opt.id
-                      ? 'border-indigo-600 bg-indigo-50/80 ring-2 ring-indigo-500/20 text-indigo-950 font-bold shadow-2xs'
-                      : 'border-gray-200 hover:border-gray-300 bg-gray-50/30 text-gray-700'
-                  }`}
-                >
-                  <span className="text-xl mb-1">{opt.icon}</span>
-                  <p className="text-xs font-bold">{opt.nameAr}</p>
-                  <p className="text-[10px] text-gray-400 font-mono" dir="ltr">{opt.nameEn}</p>
-                </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* 2. الإسم والوصف والكلمات المفتاحية باللغات الثلاث */}
+        {/* الخطوة 2: ثانياً - تصنيفات الحذاء أو الملابس أو الإكسسوارات (إجباري للدقة) */}
+        <div className="bg-white p-5 rounded-2xl border-2 border-stone-800 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-2.5">
+              <span className="w-6 h-6 rounded-full bg-stone-950 text-white flex items-center justify-center text-xs font-black">2</span>
+              <h3 className="text-sm font-black text-stone-950">
+                ثانياً: {category === 'shoes' ? 'تصنيفات الحذاء (Shoe Classification)' : category === 'clothes' ? 'تصنيفات الملابس (Clothing Classification)' : 'تصنيفات الإكسسوارات'}
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200">
+                * طلب ضروري لتصنيف دقيق
+              </span>
+            </div>
+            <span className="text-xs text-stone-700 bg-stone-100 px-2.5 py-1 rounded-lg font-bold">
+              {category === 'shoes' ? '👟 اختر موديل ونوع الحذاء المطلوب بدقة' : 'اختر القسم التفصيلي بدقة'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            {currentSubcategories.map((sub) => {
+              const isSelected = subcategory === sub.id;
+              return (
+                <button
+                  key={sub.id}
+                  type="button"
+                  onClick={() => {
+                    setIsManualSelection(true);
+                    setSubcategory(sub.id);
+                  }}
+                  className={`p-3 rounded-xl border-2 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
+                    isSelected
+                      ? 'border-stone-950 bg-stone-900 text-white font-black shadow-sm ring-2 ring-stone-950/20'
+                      : 'border-stone-200 hover:border-stone-400 bg-white text-stone-800 font-medium'
+                  }`}
+                >
+                  <span className="text-xs font-bold leading-tight">{sub.nameAr}</span>
+                  <span className={`text-[10px] font-mono ${isSelected ? 'text-stone-300' : 'text-stone-400'}`}>
+                    {sub.nameEn}
+                  </span>
+                  {isSelected && (
+                    <span className="text-[10px] font-bold text-amber-300 mt-0.5">✓ تم الاختيار</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* الخطوة 3: ثالثاً - ستايل ونمط الموضة */}
+        <div className="bg-white p-5 rounded-2xl border border-stone-200/80 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-stone-200 text-stone-800 flex items-center justify-center text-xs font-bold">3</span>
+              <h3 className="text-sm font-bold text-stone-900">ثالثاً: ستايل المظهر (Fashion Style)</h3>
+            </div>
+            <span className="text-xs text-stone-500">لربط المنتج بأقسام المتجر</span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
+            {STYLE_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => setStyle(opt.id)}
+                className={`p-3 rounded-xl border text-right transition-all cursor-pointer flex flex-col justify-between ${
+                  style === opt.id
+                    ? 'border-stone-950 bg-stone-950 text-white shadow-xs'
+                    : 'border-stone-200 hover:border-stone-300 bg-white text-stone-800'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-base">{opt.icon}</span>
+                    {style === opt.id && (
+                      <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    )}
+                  </div>
+                  <p className="text-xs font-bold">{opt.nameAr}</p>
+                  <p className={`text-[10px] font-mono ${style === opt.id ? 'text-stone-300' : 'text-stone-400'}`} dir="ltr">
+                    {opt.nameEn}
+                  </p>
+                </div>
+                <p className={`text-[10px] mt-2 leading-tight ${style === opt.id ? 'text-stone-300' : 'text-stone-500'}`}>
+                  {opt.desc}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. الإسم والوصف والكلمات المفتاحية باللغات الثلاث */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-indigo-600" />
-              <h3 className="text-sm font-bold text-gray-900">2. الإسم، الوصف، والكلمات المفتاحية (3 لغات)</h3>
+              <h3 className="text-sm font-bold text-gray-900">رابعاً: الإسم، الوصف، والكلمات المفتاحية (3 لغات)</h3>
             </div>
 
             {/* أزرار التبديل السريع بين اللغات */}
@@ -528,9 +674,19 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
                   required
                   value={nameAr}
                   onChange={(e) => setNameAr(e.target.value)}
-                  placeholder="مثال: قميص لينين كلاسيك بأكمام طويلة"
+                  placeholder="مثال: قميص لينين كلاسيك، سنيكرز أبيض، تيشيرت أوفرسايز، عطر، ساعة..."
                   className="w-full px-3.5 py-2.5 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden bg-gray-50/30 font-medium"
                 />
+                {nameAr.trim().length >= 2 && (
+                  <div className="mt-1.5 flex items-center gap-2 text-[11px] text-emerald-800 bg-emerald-50/70 border border-emerald-200/80 px-2.5 py-1 rounded-lg animate-in fade-in">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                    <span>
+                      تم التعرف تلقائياً: <strong>{detectedClassification.category === 'clothes' ? '👔 ملابس' : detectedClassification.category === 'shoes' ? '👟 أحذية' : '🕶️ إكسسوارات'}</strong>
+                      {detectedClassification.subcategory && ` (${detectedClassification.subcategory})`}
+                      {detectedClassification.suggestedStyle && ` • ستايل: ${detectedClassification.suggestedStyle}`}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -658,11 +814,11 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
           )}
         </div>
 
-        {/* 3. السعر */}
+        {/* 5. السعر */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
             <Tag className="w-4 h-4 text-emerald-600" />
-            <h3 className="text-sm font-bold text-gray-900">3. السعر (Price)</h3>
+            <h3 className="text-sm font-bold text-gray-900">خامساً: السعر (Price)</h3>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -697,23 +853,29 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
           </div>
         </div>
 
-        {/* 4. القياس والمخزون */}
+        {/* 6. القياس والمخزون */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3 flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-blue-600" />
-              <h3 className="text-sm font-bold text-gray-900">4. القياس والمخزون (Sizes & Stock)</h3>
+              <h3 className="text-sm font-bold text-gray-900">سادساً: القياس والمخزون (Sizes & Stock)</h3>
             </div>
             <div className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg">
               إجمالي القطع المتوفرة: {totalCalculatedStock}
             </div>
           </div>
 
-          {/* خيارات المقاسات السريعة */}
+          {/* نوع المقاسات المرتبطة بنوع المنتج المختار */}
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-2">
-              اختر المقاسات المتوفرة لهذا المنتج:
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-xs font-bold text-gray-700">
+                المقاسات المتوفرة (مرتبطة بـ {category === 'shoes' ? '👟 الأحذية' : category === 'clothes' ? '👕 الملابس' : '🕶️ الإكسسوارات'}):
+              </label>
+              <span className="text-[11px] font-bold text-stone-600 bg-stone-100 px-2.5 py-0.5 rounded-lg border border-stone-200">
+                {category === 'shoes' ? 'مقاسات الأحذية' : category === 'clothes' ? 'مقاسات الملابس' : 'قياس موحد'}
+              </span>
+            </div>
+
             <div className="flex flex-wrap gap-2">
               {PRESET_SIZES[category].map((sz) => {
                 const isSelected = inventoryList.some((item) => item.size === sz);
@@ -724,7 +886,7 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
                     onClick={() => togglePresetSize(sz)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-600 text-white shadow-2xs'
+                        ? 'bg-stone-950 text-white shadow-2xs'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
@@ -796,12 +958,12 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
           </div>
         </div>
 
-        {/* 5. الصور */}
+        {/* 7. الصور */}
         <div className="bg-white p-5 rounded-2xl border border-gray-200/80 shadow-2xs space-y-4">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div className="flex items-center gap-2">
               <UploadCloud className="w-4 h-4 text-blue-600" />
-              <h3 className="text-sm font-bold text-gray-900">5. صور المنتج (Images)</h3>
+              <h3 className="text-sm font-bold text-gray-900">سابعاً: صور المنتج (Product Images)</h3>
             </div>
             <span className="text-xs text-gray-400 font-bold">
               {imageFiles.length + imageUrls.length} صور محددة

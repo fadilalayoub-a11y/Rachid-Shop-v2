@@ -172,6 +172,45 @@ export function ProductBasicInfoSection({
           </span>
         </h3>
 
+        {/* 1. نوع وتصنيف المنتج أولاً وثانياً */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-stone-50 border border-stone-200">
+          {/* Main Category */}
+          <div>
+            <label className="block text-xs font-bold text-gray-800 mb-1">
+              أولاً: نوع المنتج (Category) <span className="text-rose-500">*</span>
+            </label>
+            <select
+              value={categoryId}
+              onChange={(e) => onCategoryChange(e.target.value as any)}
+              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold bg-white text-gray-900"
+            >
+              {MAIN_CATEGORIES.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.nameAr} ({cat.nameEn})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Subcategory */}
+          <div>
+            <label className="block text-xs font-bold text-gray-800 mb-1">
+              ثانياً: {categoryId === 'shoes' ? 'تصنيفات الحذاء' : categoryId === 'clothes' ? 'تصنيفات الملابس' : 'تصنيفات الإكسسوارات'} <span className="text-rose-500">*</span>
+            </label>
+            <select
+              value={subcategoryId}
+              onChange={(e) => setSubcategoryId(e.target.value)}
+              className="w-full px-3 py-2 text-xs border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold bg-white text-gray-900"
+            >
+              {currentSubcategories.map((sub) => (
+                <option key={sub.id} value={sub.id}>
+                  {sub.nameAr} ({sub.nameEn})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
         {/* Product Title (Arabic / Primary) */}
         <div>
           <label className="block text-xs font-bold text-gray-800 mb-1">
@@ -310,72 +349,33 @@ export function ProductBasicInfoSection({
           )}
         </div>
 
-        {/* Brand & Category Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* Brand */}
-          <div>
-            <label className="block text-xs font-bold text-gray-800 mb-1">
-              الماركة / البراند (Brand)
-            </label>
-            <select
-              value={brandId}
-              onChange={(e) => setBrandId(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              {STORE_BRANDS.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-              <option value="custom">+ ماركة أخرى مخصصة...</option>
-            </select>
+        {/* Brand */}
+        <div>
+          <label className="block text-xs font-bold text-gray-800 mb-1">
+            الماركة / البراند (Brand)
+          </label>
+          <select
+            value={brandId}
+            onChange={(e) => setBrandId(e.target.value)}
+            className="w-full sm:w-1/2 px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white"
+          >
+            {STORE_BRANDS.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+            <option value="custom">+ ماركة أخرى مخصصة...</option>
+          </select>
 
-            {brandId === 'custom' && (
-              <input
-                type="text"
-                value={customBrandName}
-                onChange={(e) => setCustomBrandName(e.target.value)}
-                placeholder="اكتب اسم الماركة..."
-                className="mt-2 w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            )}
-          </div>
-
-          {/* Main Category */}
-          <div>
-            <label className="block text-xs font-bold text-gray-800 mb-1">
-              القسم الرئيسي (Category) <span className="text-rose-500">*</span>
-            </label>
-            <select
-              value={categoryId}
-              onChange={(e) => onCategoryChange(e.target.value as any)}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold bg-white text-gray-900"
-            >
-              {MAIN_CATEGORIES.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.nameAr} ({cat.nameEn})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Subcategory */}
-          <div>
-            <label className="block text-xs font-bold text-gray-800 mb-1">
-              القسم الفرعي (Subcategory) <span className="text-rose-500">*</span>
-            </label>
-            <select
-              value={subcategoryId}
-              onChange={(e) => setSubcategoryId(e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold bg-white text-gray-900"
-            >
-              {currentSubcategories.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.nameAr} ({sub.nameEn})
-                </option>
-              ))}
-            </select>
-          </div>
+          {brandId === 'custom' && (
+            <input
+              type="text"
+              value={customBrandName}
+              onChange={(e) => setCustomBrandName(e.target.value)}
+              placeholder="اكتب اسم الماركة..."
+              className="mt-2 w-full sm:w-1/2 px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          )}
         </div>
 
         {/* Style Selection Cards */}

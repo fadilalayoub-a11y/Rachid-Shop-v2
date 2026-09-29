@@ -21,6 +21,7 @@ import { Footer } from '../components/Footer';
 import { LIFESTYLE_COLLECTIONS, isProductInCollection } from '../utils/collections';
 import { autoTranslateProductsForLanguage, subscribeToTranslationUpdates } from '../utils/productLocalization';
 import { generateProductSlug, cleanSlug } from '../utils/slugify';
+import { getProductEffectiveCategory, getProductEffectiveSubcategory } from '../utils/productClassifier';
 
 interface StoreProps {
   initialTab?: 'home' | 'clothes' | 'shoes' | 'accessories';
@@ -286,8 +287,14 @@ export function Store({ initialTab }: StoreProps) {
   // المنتجات المتوفرة فقط (التي بها مخزون كلي أكبر من صفر)
   const availableProducts = useMemo(() => {
     return products.filter(p => {
-      const totalStock = p.inventory?.reduce((sum, item) => sum + item.stock, 0) || 0;
-      return totalStock > 0;
+      if (Array.isArray(p.inventory) && p.inventory.length > 0) {
+        const totalStock = p.inventory.reduce((sum, item) => sum + (Number(item.stock) || 0), 0);
+        return totalStock > 0;
+      }
+      if (typeof (p as any).stock === 'number') {
+        return (p as any).stock > 0;
+      }
+      return true;
     });
   }, [products]);
 
@@ -436,14 +443,18 @@ export function Store({ initialTab }: StoreProps) {
 
   // تحديد المنتجات المناسبة للمجموعة أو القسم الحالي قبل تطبيق الفلاتر
   const baseCollectionPool = useMemo(() => {
+    // عند البحث بالاسم أو الكلمة المفتاحية يتم البحث في كامل المتجر
+    if (searchQuery.trim()) {
+      return availableProducts;
+    }
     if (activeCollection) {
       return availableProducts.filter(p => isProductInCollection(p, activeCollection.slug));
     }
     if (activeTab === 'home') {
       return availableProducts;
     }
-    return availableProducts.filter(p => p.category === activeTab);
-  }, [activeCollection, activeTab, availableProducts]);
+    return availableProducts.filter(p => getProductEffectiveCategory(p) === activeTab);
+  }, [activeCollection, activeTab, availableProducts, searchQuery]);
 
   // أنواع القطع المتوفرة في هذا القسم للفلترة
   const availableCategoryTypes = useMemo(() => {
@@ -536,14 +547,26 @@ export function Store({ initialTab }: StoreProps) {
       }
     }
 
-    // 5. تصفية نتائج البحث
+    // 5. تصفية نتائج البحث الذكية مع معالجة الفروق الإملائية الشائعة (د/ذ، أ/إ/آ/ا، ة/ه) وتعدد الكلمات
     if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      list = list.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
-        (p.category && p.category.toLowerCase().includes(q))
-      );
+      const normalize = (str: string) =>
+        str
+          .toLowerCase()
+          .replace(/[أإآ]/g, 'ا')
+          .replace(/ة/g, 'ه')
+          .replace(/ى/g, 'ي')
+          .replace(/ذ/g, 'د') // لمعالجة حداء / حذاء
+          .trim();
+
+      const queryNormalized = normalize(searchQuery);
+      const queryWords = queryNormalized.split(/\s+/).filter(Boolean);
+
+      list = list.filter(p => {
+        const corpus = normalize(
+          `${p.name || ''} ${p.nameAr || ''} ${p.nameEn || ''} ${p.nameFr || ''} ${p.description || ''} ${p.descriptionAr || ''} ${p.category || ''} ${p.subcategory || ''} ${(p.tags || []).join(' ')}`
+        );
+        return corpus.includes(queryNormalized) || (queryWords.length > 0 && queryWords.every(word => corpus.includes(word)));
+      });
     }
 
     return list;
@@ -673,7 +696,7 @@ export function Store({ initialTab }: StoreProps) {
             <div className="space-y-10 sm:space-y-12">
               
               {/* قسم المجموعات الأربع المنتقاة: SHOP BY CATEGORIES (Denim & Casual, Sportswear, Summer, Watches & Fragrances) */}
-              <ShopByCategories />
+              <ShopByCategories products={products} />
 
               {/* قسم منتجات الصفحة الرئيسية مع نظام تبويبات التصفية والسلايدر الأصلي */}
               <ProductSection 

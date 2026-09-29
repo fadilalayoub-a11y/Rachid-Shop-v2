@@ -89,6 +89,21 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
     e.preventDefault();
     setMessage({ type: '', text: '' });
 
+    if (!category) {
+      setMessage({ type: 'error', text: 'يرجى تحديد نوع المنتج (أحذية، ملابس، أو إكسسوارات) أولاً كطلب إجباري' });
+      return;
+    }
+
+    if (!subcategory) {
+      setMessage({
+        type: 'error',
+        text: category === 'shoes'
+          ? 'يرجى تحديد تصنيف الحذاء بدقة (سنيكرز، أحذية كلاسيكية وموكاسان، جري، صنادل، أو بوت) كطلب إجباري'
+          : 'يرجى تحديد التصنيف التفصيلي للمنتج كطلب إجباري'
+      });
+      return;
+    }
+
     if (!name || !description || !price) {
       setMessage({ type: 'error', text: 'يرجى ملء جميع الحقول المطلوبة (الاسم، الوصف، السعر)' });
       return;
@@ -363,9 +378,11 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-3.5 bg-stone-50 border border-stone-200 rounded-2xl">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">القسم الرئيسي</label>
+                <label className="block text-xs font-bold text-stone-900 mb-1">
+                  أولاً: نوع المنتج <span className="text-rose-500">*</span>
+                </label>
                 <select
                   value={category}
                   onChange={e => {
@@ -376,22 +393,24 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
                       setSubcategory(subs[0].id);
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer bg-white text-xs font-bold"
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl focus:ring-2 focus:ring-stone-950 outline-none transition-all cursor-pointer bg-white text-xs font-bold text-stone-900"
                 >
-                  <option value="clothes">ملابس (Clothes)</option>
-                  <option value="shoes">أحذية (Shoes)</option>
-                  <option value="accessories">إكسسوارات (Accessories)</option>
+                  <option value="shoes">👟 أحذية (Shoes)</option>
+                  <option value="clothes">👕 ملابس (Clothes)</option>
+                  <option value="accessories">🕶️ إكسسوارات (Accessories)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">القسم التفصيلي</label>
+                <label className="block text-xs font-bold text-stone-900 mb-1">
+                  ثانياً: {category === 'shoes' ? 'تصنيفات الحذاء' : category === 'clothes' ? 'تصنيفات الملابس' : 'تصنيفات الإكسسوارات'} <span className="text-rose-500">*</span>
+                </label>
                 <select
                   value={subcategory}
                   onChange={e => setSubcategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-blue-300 bg-blue-50/30 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer font-bold text-gray-900 text-xs"
+                  className="w-full px-3 py-2 border border-stone-800 bg-white rounded-xl focus:ring-2 focus:ring-stone-950 outline-none transition-all cursor-pointer font-bold text-stone-900 text-xs"
                 >
-                  <option value="">-- اختر القسم التفصيلي --</option>
+                  <option value="">-- اختر التصنيف الدقيق --</option>
                   {getSubcategoriesForCategory(category).map((sub) => (
                     <option key={sub.id} value={sub.id}>
                       {sub.nameAr}

@@ -77,15 +77,15 @@ export const STORE_SUBCATEGORIES: SubcategoryOption[] = [
   },
   {
     id: 'formal-shoes',
-    nameAr: 'أحذية كلاسيكية وجلدية (Formal & Classic Shoes)',
-    nameEn: 'Formal & Classic Shoes',
-    nameFr: 'Chaussures de Ville',
+    nameAr: 'أحذية كلاسيكية وموكاسان (Loafers & Formal)',
+    nameEn: 'Formal & Loafers',
+    nameFr: 'Chaussures de Ville & Mocassins',
     category: 'shoes',
     filterKey: 'casual-shoe',
   },
   {
     id: 'running-shoes',
-    nameAr: 'أحذية جري وتمارين (Running & Sport Shoes)',
+    nameAr: 'أحذية جري وتمارين (Running & Sport)',
     nameEn: 'Running & Sport Shoes',
     nameFr: 'Chaussures de Sport',
     category: 'shoes',
@@ -98,6 +98,14 @@ export const STORE_SUBCATEGORIES: SubcategoryOption[] = [
     nameFr: 'Sandales & Claquettes',
     category: 'shoes',
     filterKey: 'slides',
+  },
+  {
+    id: 'boots',
+    nameAr: 'أحذية شتوية وبوت (Boots)',
+    nameEn: 'Boots',
+    nameFr: 'Bottes & Bottines',
+    category: 'shoes',
+    filterKey: 'casual-shoe',
   },
 
   // إكسسوارات (Accessories)

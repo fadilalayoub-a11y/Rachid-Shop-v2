@@ -21,6 +21,7 @@ import {
   AdminTabType,
   InventoryTab,
   AddProductTab,
+  SectionProductsTab,
   DeleteConfirmModal,
   HeroImagesTab,
   CategoryImagesTab,
@@ -215,6 +216,11 @@ export function Admin({ defaultTab }: AdminProps) {
               productsCount={products.length}
               onGoToInventory={() => handleTabChange('inventory')}
             />
+          )}
+
+          {/* Tab 2.5: Section Products Management */}
+          {adminTab === 'section_products' && (
+            <SectionProductsTab products={products} />
           )}
 
           {/* Tab 3: Inventory */}
