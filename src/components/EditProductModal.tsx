@@ -105,10 +105,15 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
       const newlyUploadedUrls: string[] = [];
       if (newImageFiles.length > 0) {
         const signatureRes = await fetch('/api/cloudinary-sign');
-        const signatureData = await signatureRes.json();
+        let signatureData: any = null;
+        try {
+          signatureData = await signatureRes.json();
+        } catch {
+          throw new Error('تعذر الاتصال بمسار التوقيع الأمني للسيرفر (/api/cloudinary-sign). يرجى التأكد من تشغيل السيرفر أو إعداد متغيرات البيئة.');
+        }
 
-        if (!signatureRes.ok) {
-          throw new Error(signatureData.error || 'فشل الحصول على تصريح رفع الصور');
+        if (!signatureRes.ok || !signatureData || !signatureData.signature) {
+          throw new Error(signatureData?.error || 'فشل الحصول على تصريح رفع الصور');
         }
 
         const { timestamp, signature, apiKey, cloudName } = signatureData;
@@ -126,7 +131,13 @@ export function EditProductModal({ product, isOpen, onClose, onProductUpdated }:
             body: addFormData,
           });
 
-          const addUploadData = await addUploadRes.json();
+          let addUploadData: any = null;
+          try {
+            addUploadData = await addUploadRes.json();
+          } catch {
+            throw new Error('فشل استلام رد سليم من Cloudinary أثناء رفع الصورة');
+          }
+
           if (!addUploadRes.ok || !addUploadData.secure_url) {
             throw new Error(addUploadData.error?.message || 'فشل رفع إحدى الصور');
           }

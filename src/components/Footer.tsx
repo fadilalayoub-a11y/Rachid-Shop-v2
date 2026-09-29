@@ -13,7 +13,9 @@ export function Footer() {
           
           {/* الجانب الأيسر: شعار المتجر وأسفله العبارة الوصفية المترجمة */}
           <div className="flex flex-col items-center md:items-start max-w-sm">
-            <Logo className="h-10 sm:h-12 w-auto mb-3" color="black" />
+            <div className="mb-3">
+              <Logo color="black" />
+            </div>
             <p className="text-xs text-stone-500 font-normal leading-relaxed text-center md:text-start">
               {t.footerDescription}
             </p>

@@ -206,25 +206,53 @@ export function AddProductTab({ productsCount, onGoToInventory }: AddProductTabP
     setIsSubmitting(true);
 
     try {
-      // 1. رفع الصور الجديدة إن وجدت إلى Cloudinary
+      // 1. رفع الصور الجديدة إن وجدت إلى Cloudinary بالطريقة الموقعة الآمنة (Signed Upload)
       const uploadedUrls: string[] = [...imageUrls];
 
-      for (let i = 0; i < imageFiles.length; i++) {
-        const file = imageFiles[i];
-        const formData = new FormData();
-        formData.append('image', file);
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const data = await response.json();
-        if (!response.ok || !data.secure_url) {
-          throw new Error(data.error?.message || 'خطأ أثناء رفع إحدى الصور');
+      if (imageFiles.length > 0) {
+        // جلب التصريح والتوقيع المشفر من السيرفر بشكل آمن دون كشف الـ Secret Key
+        const signatureRes = await fetch('/api/cloudinary-sign');
+        
+        let signatureData: any = null;
+        try {
+          signatureData = await signatureRes.json();
+        } catch {
+          throw new Error('تعذر الاتصال بمسار التوقيع الأمني للسيرفر (/api/cloudinary-sign). يرجى التأكد من تشغيل السيرفر أو إعداد متغيرات البيئة في الاستضافة.');
         }
 
-        uploadedUrls.push(data.secure_url);
+        if (!signatureRes.ok || !signatureData || !signatureData.signature) {
+          throw new Error(signatureData?.error || 'فشل الحصول على تصريح رفع الصور من السيرفر.');
+        }
+
+        const { timestamp, signature, apiKey, cloudName } = signatureData;
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+        for (let i = 0; i < imageFiles.length; i++) {
+          const file = imageFiles[i];
+          const uploadFormData = new FormData();
+          uploadFormData.append('file', file);
+          uploadFormData.append('api_key', apiKey);
+          uploadFormData.append('timestamp', timestamp.toString());
+          uploadFormData.append('signature', signature);
+
+          const uploadRes = await fetch(cloudinaryUrl, {
+            method: 'POST',
+            body: uploadFormData,
+          });
+
+          let uploadData: any = null;
+          try {
+            uploadData = await uploadRes.json();
+          } catch {
+            throw new Error(`فشل استلام رد سليم من Cloudinary أثناء رفع الصورة رقم ${i + 1}`);
+          }
+
+          if (!uploadRes.ok || !uploadData.secure_url) {
+            throw new Error(uploadData?.error?.message || `خطأ أثناء رفع الصورة رقم ${i + 1} إلى Cloudinary`);
+          }
+
+          uploadedUrls.push(uploadData.secure_url);
+        }
       }
 
       const primaryImage = uploadedUrls[0];

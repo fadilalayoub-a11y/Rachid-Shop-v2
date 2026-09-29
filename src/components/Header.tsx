@@ -272,25 +272,25 @@ export function Header({
 
             {/* Logo (Desktop display in normal flow) */}
             <div 
-              className="hidden md:flex flex-shrink-0 items-center cursor-pointer py-1" 
+              className="hidden md:flex flex-shrink-0 items-center cursor-pointer py-1.5 hover:opacity-90 transition-opacity" 
               onClick={() => {
                 setActiveTab('home');
                 if (onSearchChange) onSearchChange('');
               }}
             >
-              <Logo className="h-9 sm:h-10 w-auto" color="black" />
+              <Logo color="black" />
             </div>
           </div>
 
           {/* Mobile Logo Centered */}
           <div 
-            className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer pointer-events-auto"
+            className="md:hidden absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center cursor-pointer pointer-events-auto hover:opacity-90 transition-opacity"
             onClick={() => {
               setActiveTab('home');
               if (onSearchChange) onSearchChange('');
             }}
           >
-            <Logo className="h-8 sm:h-9 w-auto" color="black" />
+            <Logo color="black" />
           </div>
 
           {/* Desktop Navigation */}
